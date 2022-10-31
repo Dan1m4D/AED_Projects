@@ -17,7 +17,7 @@
 // static configuration
 //
 
-#define _max_road_size_  800  // the maximum problem size
+#define _max_road_size_ 800  // the maximum problem size
 #define _min_road_speed_   2  // must not be smaller than 1, shouldnot be smaller than 2
 #define _max_road_speed_   9  // must not be larger than 9 (only because of the PDF figure)
 
@@ -75,50 +75,64 @@ static solution_t solution_1,solution_1_best;
 static double solution_1_elapsed_time; // time it took to solve the problem
 static unsigned long solution_1_count; // effort dispended solving the problem
 
+static int minPositionValues[_max_road_size_];
+
+
+
+
+
+int largest(int arr[])
+{
+    int i;
+    
+    // Initialize maximum element
+    int max = arr[0];
+ 
+    // Traverse array elements from second and
+    // compare every element with current max 
+    for (i = 1; i < sizeof(arr)/sizeof(arr[0]); i++)
+        if (arr[i] > max)
+            max = arr[i];
+ 
+    return max;
+}
+
 static void solution_1_recursion(int move_number,int position,int speed,int final_position)
 {
-  int curr_speed;
-  move_number = 0;
-  solution_1_count = 0;
-  
+  int i,new_speed;
 
-    curr_speed = max_road_speed[position];
-    while(curr_speed > 0){
 
-        // record move
-        solution_1_count++;
-        solution_1.positions[move_number] = position;
 
-        // is it a solution?
-        if(position == final_position && curr_speed == 1) {
-          // is it a better solution?
-          solution_1_best = solution_1;
-          solution_1_best.n_moves = move_number;
+  // record move
+  solution_1_count++;
+  solution_1.positions[move_number] = position;
+  // is it a solution?
+  if(position == final_position && speed == 1)
+  {
+    // is it a better solution?
+    if(move_number < solution_1_best.n_moves)
+    {
+      solution_1_best = solution_1;
+      solution_1_best.n_moves = move_number;
+    }
+    return;
+  }
+
+  if (move_number + 1 >= minPositionValues[position + new_speed] && minPositionValues[position + new_speed] != 0) {
+    return;
+  }
+
+  // no, try all legal speeds
+  for(new_speed = speed + 1;new_speed >= speed - 1;new_speed--)
+    if(new_speed >= 1 && new_speed <= _max_road_speed_ && position + new_speed <= final_position)
+    {
+      for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++);
           
-          move_number = 0;
-          return;
-
+        if(i > new_speed) {
+          minPositionValues[position] = move_number;
+          solution_1_recursion(move_number + 1,position + new_speed,new_speed,final_position);
         }
-
-
-
-
-        if(position + curr_speed <= final_position) {
-          if(curr_speed <= max_road_speed[position + curr_speed]) {
-            move_number = move_number + 1;
-            position = position + curr_speed;
-            curr_speed = max_road_speed[position];
-          }
-          else {
-            curr_speed = curr_speed - 1;
-            continue;
-          }    
-        }
-        else {
-          curr_speed = curr_speed - 1;
-          continue;
-        }        
-
+      
     }
 
     return;
@@ -208,6 +222,9 @@ int main(int argc,char *argv[argc + 1])
     // second solution method (relatively good)
     if(solution_1_elapsed_time < _time_limit_)
     {
+
+      memset( minPositionValues, 0, _max_road_size_*sizeof(int) );
+      
       solve_1(final_position);
       if(print_this_one != 0)
       {

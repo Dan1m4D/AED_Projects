@@ -23,3 +23,10 @@ solution_speed_run_with_zlib:	solution_speed_run.c make_custom_pdf.c
 
 sol2_speed_run:		sol2_speed_run.c make_custom_pdf.c
 	cc -Wall -O2 -D_use_zlib_=0 sol2_speed_run.c -o sol2_speed_run -lm
+
+sol3_speed_run:		sol3_speed_run.c make_custom_pdf.c
+	cc -Wall -O2 -D_use_zlib_=0 sol3_speed_run.c -o sol3_speed_run -lm
+
+
+sol_final:		sol_final.c make_custom_pdf.c
+	cc -Wall -O2 -D_use_zlib_=0 sol_final.c -o sol_final -lm

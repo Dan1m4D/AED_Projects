@@ -75,12 +75,31 @@ static solution_t solution_1,solution_1_best;
 static double solution_1_elapsed_time; // time it took to solve the problem
 static unsigned long solution_1_count; // effort dispended solving the problem
 
+
+
+int largest(int arr[])
+{
+    int i;
+    
+    // Initialize maximum element
+    int max = arr[0];
+ 
+    // Traverse array elements from second and
+    // compare every element with current max 
+    for (i = 1; i < sizeof(arr)/sizeof(arr[0]); i++)
+        if (arr[i] > max)
+            max = arr[i];
+ 
+    return max;
+}
+
 static void solution_1_recursion(int move_number,int position,int speed,int final_position)
 {
   int curr_speed;
+
   move_number = 0;
   solution_1_count = 0;
-  
+  int jumpSpeeds[_max_road_speed_];
 
     curr_speed = max_road_speed[position];
     while(curr_speed > 0){
@@ -104,6 +123,15 @@ static void solution_1_recursion(int move_number,int position,int speed,int fina
 
 
         if(position + curr_speed <= final_position) {
+
+          for(int i = _min_road_speed_; i < _max_road_speed_; i++) {
+            // Speed da posição que está + da próxima
+            jumpSpeeds[i] = max_road_speed[position] + max_road_speed[position + i];       
+          }
+
+          curr_speed = largest(jumpSpeeds) - max_road_speed[position];
+          int jumpSpeeds[_max_road_speed_] = {0};
+
           if(curr_speed <= max_road_speed[position + curr_speed]) {
             move_number = move_number + 1;
             position = position + curr_speed;
