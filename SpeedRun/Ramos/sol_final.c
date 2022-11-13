@@ -144,8 +144,17 @@ static void solution_2_recursion(int move_number,int position,int speed,int fina
   // Este é o código simples que verifica se vale a pena continuar o ramo ou não
   // Aqui ou depois de is it a solution??                                    // maxVelocidade[position] != 0
   // solution_2_count >= solution_2_best.n_moves
-  if (speed <= maxVelocidade[position] && move_number >= minSaltos[position] && solution_2.positions[solution_2_best.n_moves] != 0 ) {
-    return;
+
+  if (solution_2.positions[solution_2_best.n_moves] != 0){
+
+//    if (solution_2_count > solution_2_best.n_moves)) {
+//      return;
+//    }
+                                        // always reach at least one solution before cutting branches (happens very fast since in the first solution we are always going at the maximum speed possible)
+    if (speed <= maxVelocidade[position] && move_number >= minSaltos[position]) {
+      return;
+    }
+
   }
 
   int i,new_speed;
@@ -156,20 +165,16 @@ static void solution_2_recursion(int move_number,int position,int speed,int fina
 
   // is it a solution?
   if(position == final_position && speed == 1) {
-    // is it a better solution?
-    if(move_number < solution_2_best.n_moves) {
-      solution_2_best = solution_2;
-      solution_2_best.n_moves = move_number;
-    }
+    // this solution is always the best
+    solution_2_best = solution_2;
+    solution_2_best.n_moves = move_number;
     return;
   }
-
-
   // no, try all legal speeds
   for(new_speed = speed + 1;new_speed >= speed - 1;new_speed--) {
-      // >= 2 ou _min_road_speed_?    // max_road_speed vs _max_road_speed_
-    if(new_speed >= 1 && new_speed <= _max_road_speed_ && position + new_speed <= final_position) {
-      
+      //new_speed >= 1 &&
+    if( new_speed <= max_road_speed[position + new_speed] && position + new_speed <= final_position) {
+
       for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++);
             
       if(i > new_speed) {
@@ -190,8 +195,9 @@ static void solve_2(int final_position)
     fprintf(stderr,"solve_1: bad final_position\n");
     exit(1);
   }  
-  memset( minSaltos, 0, _max_road_size_*sizeof(minSaltos[0]));
-  memset( maxVelocidade, _max_road_speed_, _max_road_size_*sizeof(maxVelocidade[0]) );
+  memset( minSaltos, _max_road_size_, final_position*sizeof(minSaltos[0]));
+  memset( maxVelocidade, 0, final_position*sizeof(maxVelocidade[0]) );
+  memset( solution_2.positions, 0, final_position*sizeof(solution_2.positions[0]));
   solution_2_elapsed_time = cpu_time();
   solution_2_count = 0ul;
   solution_2_best.n_moves = final_position + 100;

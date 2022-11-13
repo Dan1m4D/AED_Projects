@@ -30,3 +30,7 @@ sol3_speed_run:		sol3_speed_run.c make_custom_pdf.c
 
 sol_final:		sol_final.c make_custom_pdf.c
 	cc -Wall -O2 -D_use_zlib_=0 sol_final.c -o sol_final -lm
+
+
+sol_ULTIMATE:		sol_ULTIMATE.c make_custom_pdf.c
+	cc -Wall -O2 -D_use_zlib_=0 sol_ULTIMATE.c -o sol_ULTIMATE -lm
