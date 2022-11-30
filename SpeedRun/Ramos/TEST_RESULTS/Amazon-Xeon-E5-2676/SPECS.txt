@@ -1,0 +1,7 @@
+Amazon Web Server >>>
+    - PC: Amazon Web Server Host
+    - OS: Ubuntu 22.04 LTS
+    - Kernel: 5.15.0-1021-aws
+    - CPU: Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz
+    - Memory: 1GB ecc
+    - GPU: Intel Graphics

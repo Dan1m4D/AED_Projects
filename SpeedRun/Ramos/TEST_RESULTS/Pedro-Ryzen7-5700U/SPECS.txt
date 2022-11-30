@@ -1,0 +1,8 @@
+Pedro >>>
+    - PC: MSI Modern 15 A5M
+    - OS: Manjaro (Arch) KDE Plasma 5.25.5
+    - Kernel: 5.15.74-3-MANJARO
+    - CPU: AMD Ryzen 7 5700U 8 cores 16 threads Overclocked@4.335HZ
+    - Memory: 16GB 3200MHZ Dual Channel
+    - Shell: bash 5.1.16
+    - GPU: AMD Vega 8 Lucienne
