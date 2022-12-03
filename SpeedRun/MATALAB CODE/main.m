@@ -1,0 +1,1 @@
+load('test.txt','-ascii')
