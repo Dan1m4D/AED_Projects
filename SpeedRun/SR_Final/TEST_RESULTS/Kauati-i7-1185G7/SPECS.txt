@@ -1,0 +1,8 @@
+Pedro >>>
+    - PC: Lenovo ThinkPad X1
+    - OS: Endeavour (Arch) i3
+    - Kernel: 5.15.74-3-MANJARO
+    - CPU: Intel i7 1185G7 8 cores
+    - Memory: 16GB 3200MHZ Dual Channel
+    - Shell: bash 5.1.16
+    - GPU: Intel Iris X

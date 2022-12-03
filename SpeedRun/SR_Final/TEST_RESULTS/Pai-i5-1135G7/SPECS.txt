@@ -1,0 +1,6 @@
+Pai >>>
+    - OS: Kubuntu 22.04
+    - Kernel: 5.15.0-52-generic
+    - CPU: Intel Core i5 1135G7 @2.4GHz
+    - Memory: 16GB Dual Channel
+    - GPU: Mesa Intel Xe Graphics
