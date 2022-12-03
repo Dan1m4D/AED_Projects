@@ -133,8 +133,8 @@ static void solve_1(int final_position)
 
 
 static solution_t solution_2,solution_2_best;
-static double solution_2_elapsed_time; // time it took to solve the problem
-static unsigned long solution_2_count; // effort dispended solving the problem
+static double solution_2_elapsed_time;          // time it took to solve the problem
+static unsigned long solution_2_count;           // effort dispended solving the problem
 
 static int minSaltos[_max_road_size_];          // Array com o numero mínimo de passos precisos para chegar a cada posição
                                                 // Ex: se chegar à posição 14 em 5 saltos, minSaltos[14] = 5;
@@ -157,7 +157,8 @@ static void solution_2_recursion(int move_number,int position,int speed,int fina
   solution_2_count++;
   solution_2.positions[move_number] = position;
 
-  // Ver se é solução. Neste código chegar a uma solução implica que é sempre a melhor, pois náo foi cortada antes de lá chegar
+  //  Ver se é solução. Neste código chegar a uma solução implica que é 
+  // sempre a melhor, pois náo foi cortada antes de lá chegar
   if(position == final_position && speed == 1) {
     // this solution is always the best
     solution_2_best = solution_2;
@@ -170,15 +171,14 @@ static void solution_2_recursion(int move_number,int position,int speed,int fina
 
     if(new_speed > 0 && new_speed <= max_road_speed[position + new_speed] && position + new_speed <= final_position) {
       
-
       for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++);
-
 
       if(i > new_speed) {
       
         //  Este é o código simples que verifica se vale a pena continuar o ramo ou não
-        //  Apenas começa a cortar ramos se já houver pelo menos uma solução (assim garantimos sempre uma solução, 
-        // sem isto pode haver problemas para alguns final_positions)
+        //  Apenas começa a cortar ramos se já houver pelo menos uma solução 
+        // (assim garantimos sempre uma solução, sem isto pode haver problemas 
+        // para alguns final_positions)
 
         //  Como o primeiro ramo vai sempre pelas velocidades mais altas possíveis (menos no fim), 
         // há uma grande chance de ser o melhor, mas não podemos assumir isso.
@@ -194,9 +194,11 @@ static void solution_2_recursion(int move_number,int position,int speed,int fina
           }
         }            
 
-        //  Como o ramo continuou, podemos afirmar que o numero de passos utilizados para chegar a esta posição é o menor até agora e
-        // que a velocidade com que lá chegamos é a menor de todas as iterações anteriores, logo podemos atualizar os valores do numero 
-        // de saltos minimos e velocidade máxima desta posição e de todas as posições intermédias por que passa-mos.
+        //  Como o ramo continuou, podemos afirmar que o numero de passos utilizados 
+        // para chegar a esta posição é o menor até agora e que a velocidade com que 
+        // lá chegamos é a menor de todas as iterações anteriores, logo podemos atualizar 
+        // os valores do número de saltos minimos e velocidade máxima desta posição e de
+        // todas as posições intermédias por que passa-mos.
 
         // Posição atual
         minSaltos[position] = move_number+1;
