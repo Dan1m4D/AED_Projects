@@ -1,5 +1,5 @@
 clear all;
-nVector = [10:1:50]
+nVector = [10:1:50 55]
 resultVector = [4.600e-06
                 8.898e-06
                 1.059e-05
@@ -40,7 +40,8 @@ resultVector = [4.600e-06
                 1.288e+02
                 2.118e+02
                 3.450e+02
-                5.707e+02]';
+                5.707e+02
+                7.509e+03]';
 
 figure(1);
 hold on;
