@@ -136,16 +136,21 @@ static solution_t solution_2,solution_2_best;
 static double solution_2_elapsed_time;          // time it took to solve the problem
 static unsigned long solution_2_count;           // effort dispended solving the problem
 
-static int minSaltos[_max_road_size_];          // Array com o numero mínimo de passos precisos para chegar a cada posição
-                                                // Ex: se chegar à posição 14 em 5 saltos, minSaltos[14] = 5;
-                                                // Se nouta iteração chegar em 7 saltos, o programa acaba com o ramo;
-                                                // Se chegar com 4 saltos o programa começa a usar esse ramo com o principal;
+static int minSaltos[_max_road_size_];          //  Array com o numero mínimo de passos precisos para chegar a cada 
+                                                // posição
+                                                //  Ex: se chegar à posição 14 em 5 saltos, minSaltos[14] = 5;
+                                                //  Se noutra iteração chegar em 7 saltos, o programa acaba com o 
+                                                // ramo;
+                                                //  Se chegar com 4 saltos o programa começa a usar esse ramo com o 
+                                                // principal;
 
-static int maxVelocidade[_max_road_size_];      // Mesma coisa do que o Array de cima, mas desta vez conta a velocidade a que se chega 
-                                                // a cada posição. Só serve para "desempatar" ramos que podem ter chegado com o mesmo
+static int maxVelocidade[_max_road_size_];      //  Mesma coisa do que o Array de cima, mas desta vez conta a 
+                                                // velocidade a que se chega a cada posição. Só serve para 
+                                                // "desempatar" ramos que podem ter chegado com o mesmo
                                                 // número de saltos mas diferentes velocidades.
-                                                // Ex: Se 2 ramos chegarem com 6 saltos à posição 16, o que tiver mais velocidade contínua,
-                                                // caso sejam a mesma, ambos ramos continuam até se desempatarem noutra posição
+                                                //  Ex: Se 2 ramos chegarem com 6 saltos à posição 16, o que 
+                                                // tiver mais velocidade contínua, caso sejam a mesma, ambos
+                                                // ramos continuam até se desempatarem noutra posição
 
 
 static void solution_2_recursion(int move_number,int position,int speed,int final_position) {

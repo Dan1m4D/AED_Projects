@@ -1,5 +1,5 @@
 clear all;
-nVector = [10:1:50 55]
+nVector = [10:1:50 55];
 PC1 = [4.017e-06
                 7.874e-06
                 9.067e-06
@@ -132,8 +132,8 @@ figure(1);
 hold on;
 
 plot(nVector, PC1, "r", LineWidth=2);
-plot(nVector, PC2, "g", LineWidth=2);
-plot(nVector, PC3, "b", LineWidth=2);
+plot(nVector, PC2, "g-.", LineWidth=2);
+plot(nVector, PC3, "b--", LineWidth=2);
 
 
 title("Solução recursíva inicial");
