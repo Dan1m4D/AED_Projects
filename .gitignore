@@ -10,3 +10,6 @@
 
 #Ignore ziped files
 *.tar.gz
+
+#Ignore executable solutions for WORD_LADDER
+word_ladder
