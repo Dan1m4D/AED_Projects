@@ -174,8 +174,8 @@ static hash_table_t *hash_table_create(void)
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
 
-  hash_table->heads = malloc(hash_table->hash_table_size*sizeof(struct hash_table_node_t));  
-  memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(struct hash_table_node_t));
+  hash_table->heads = malloc(hash_table->hash_table_size*sizeof(hash_table_node_t));  
+  memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(hash_table_node_t));
 
   return hash_table;
 }
@@ -229,12 +229,13 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
   i = crc32(word) % hash_table->hash_table_size;
 
   //printf("entries > %i\n", hash_table->number_of_entries);
-
   printf("heads[%i]> |%i| \n", i, hash_table->heads[i]);
 
+  printf("%i", hash_table->heads[i] == NULL);
 
   // Se o node não existir e se a operação for de insert
   if (hash_table->heads[i] == NULL && insert_if_not_found == 1) {
+    printf("AQUI0");
     if (hash_table->number_of_entries == hash_table->hash_table_size) {
       fprintf(stderr,"find_word: out of space on the table\n");
     }
