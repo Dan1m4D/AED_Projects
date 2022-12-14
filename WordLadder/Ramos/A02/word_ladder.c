@@ -62,7 +62,7 @@ typedef struct hash_table_s      hash_table_t;
 
 struct adjacency_node_s
 {
-  adjacency_node_t *next;            // link to th enext adjacency list node
+  adjacency_node_t *next;            // link to the next adjacency list node
   hash_table_node_t *vertex;         // the other vertex
 };
 
@@ -188,12 +188,12 @@ static void hash_table_grow(hash_table_t **hash_table)
   hash_table_t *temp_table;
 
 
+  //hash_table_node_t *node;
+  //node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
   
-  hash_table_node_t *node;
-  node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+  hash_table_node_t *node = allocate_hash_table_node();
 
-  hash_table_node_t *new_node;
-  new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+  hash_table_node_t *new_node = allocate_hash_table_node();
 
   temp_table = hash_table_create();
 
@@ -234,13 +234,11 @@ static void hash_table_free(hash_table_t *hash_table)
 static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found)
 {
   unsigned int hashVal;
-  hash_table_node_t *node;
-  node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+  hash_table_node_t *node = allocate_hash_table_node();
 
   if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
     hash_table_grow(&(*hash_table));
   }
-
 
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
@@ -255,8 +253,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       (*hash_table)->number_of_entries++;
     }
     else {
-      hash_table_node_t *new_node;
-      new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+      hash_table_node_t *new_node = allocate_hash_table_node();
 
       node = (*hash_table)->heads[hashVal];
       while (node->next != NULL) {
@@ -267,13 +264,22 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node = new_node;
     }
   }
-
   else {
+    if ((*hash_table)->heads[hashVal] != NULL) {
       node = (*hash_table)->heads[hashVal];
-      while (node->next != NULL) {
-        node = node->next;
+      while (node->next != NULL) {      
+        if (strcmp(node->word, word)==0) {
+          return node;
+        }
+        else {
+          node = node->next;
+        }
       }
-      printf("NODE_FOUND >%s\n", node->word);
+      return NULL;
+    }
+    else {
+      return NULL;
+    }
   }
 
   return node;
@@ -300,19 +306,26 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 {
   hash_table_node_t *to,*from_representative,*to_representative;
   adjacency_node_t *link;
+  to = allocate_hash_table_node();
   
-  printf("NODE_WORD >%s\n", word);
 
   to = find_word(&hash_table,word,0);
 
+  if (to == NULL) {
+    return;
+  }
+
   to->previous = from;
+
+  printf("Final >%s  |  Penultima >%s  |  ", to->word, from->word);
 
   while(from->previous != NULL) {
     from = from->previous;
+    printf("next >%s  |  ", from->word);
   }
-
+  printf("\n");
   to->head = from;
-
+  return;
 }
 
 
@@ -528,11 +541,9 @@ int main(int argc,char **argv)
   }
 
   // find all similar words
-  for(i = 0u;i < hash_table->hash_table_size;i++){
+  for(i = 0u;i < hash_table->hash_table_size;i++) {
     for(node = hash_table->heads[i];node != NULL;node = node->next) {
-      printf("node->word >%s  \n", node->word);
       similar_words(hash_table,node);
-      printf("node->previous >%i\n", node->previous);
     }
   }
   graph_info(hash_table);
