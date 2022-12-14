@@ -5,7 +5,7 @@
 //
 // Place your student numbers and names here
 //   N.Mec. 107348  Name: Pedro Ramos
-//
+//   N.Mec. 105925  Name : Rafael Kauati
 // Do as much as you can
 //   1) MANDATORY: complete the hash table code
 //      *) hash_table_create
@@ -169,49 +169,34 @@ static hash_table_t *hash_table_create(void)
     exit(1);
   }
 
-  hash_table->hash_table_size = 100;
+  hash_table->hash_table_size = 1000;
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
 
   hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
-  //hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(hash_table->heads));  
   memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(hash_table->heads));
 
   return hash_table;
 }
-static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found);
 
   // A completar
-static void hash_table_grow(hash_table_t **hash_table)
+static void hash_table_grow(hash_table_t *hash_table)
 {
-  unsigned int hashVal;
   hash_table_t *temp_table;
-
-
-  
-  hash_table_node_t *node;
-  node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
-
-  hash_table_node_t *new_node;
-  new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
-
   temp_table = hash_table_create();
 
-  temp_table->hash_table_size = (*hash_table)->hash_table_size*2;
+  temp_table = hash_table;
+  temp_table->hash_table_size = temp_table->hash_table_size*2;
 
-  temp_table->heads = (unsigned int*) malloc(temp_table->hash_table_size*sizeof(unsigned int*));  
-  memset(temp_table->heads, NULL, temp_table->hash_table_size*sizeof(temp_table->heads));
-  
-  for (unsigned int i = 0u; i < (*hash_table)->hash_table_size; i++) { 
-    if ((*hash_table)->heads[i] != NULL) {    
-      for(node = (*hash_table)->heads[i];node != NULL;node = node->next) {
-        (void)find_word(&temp_table,node->word,1);
-      }
-    }
-
+  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
+    hash_table_node_t *node = &hash_table->heads[i];
+    //find_word(temp_table,node->word,1);
   }
 
-  (*hash_table) = temp_table;
+  hash_table = temp_table;
+  free(temp_table);
+
+  // hash_table = (hash_table_t *) realloc(hash_table, sizeof(hash_table_t));
 }
 
   // A completar
@@ -219,59 +204,53 @@ static void hash_table_free(hash_table_t *hash_table)
 {
   for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
     hash_table_node_t *node = hash_table->heads[i];
-
+    hash_table_node_t *temp;
     while (node->next != NULL) {
-      node = node->next;
+      temp = node;
+      node = temp->next;
+      free_hash_table_node(temp);
     }
-
-    while (node->previous != NULL) {
-      node = node->previous;
-      free_hash_table_node(node->next);
-    }
-    free_hash_table_node(node);
   }
   free(hash_table);
   return;
 }
 
   // A completar
-static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found)
+static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,int insert_if_not_found)
 {
   unsigned int hashVal;
   hash_table_node_t *node;
   node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
 
-  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
-    hash_table_grow(&(*hash_table));
+  if (hash_table->number_of_entries >= hash_table->hash_table_size / 2) {
+    hash_table_grow(hash_table);
   }
 
-  hashVal = crc32(word) % (*hash_table)->hash_table_size;
+  hashVal = crc32(word) % hash_table->hash_table_size;
+
+  //printf("entries > %i\n", hash_table->number_of_entries);
+  //printf("heads[%i]> |%i|\n", hashVal, hash_table->heads[hashVal]);
+  //printf("t/f > %d\n", hash_table->heads[hashVal] == NULL && insert_if_not_found == 1);
+
 
   // Se o node não existir e se a operação for de insert
-  if (insert_if_not_found == 1) {
-    if ((*hash_table)->heads[hashVal] == NULL) {
-      node->head = node;
-      node->next = NULL;
-      node->previous = NULL;
-      strcpy(node->word, word);
-
-      (*hash_table)->heads[hashVal] = node;
-      (*hash_table)->number_of_entries++;
+  if (hash_table->heads[hashVal] == NULL && insert_if_not_found == 1) {
+    if (hash_table->number_of_entries == hash_table->hash_table_size) {
+      fprintf(stderr,"find_word: out of space on the table\n");
     }
-    else {
-      hash_table_node_t *new_node;
-      new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+    node->head = hash_table->heads[hashVal];
+    node->next = NULL;
+    node->previous = NULL;
+    strcpy(node->word, word);
 
-      node = (*hash_table)->heads[hashVal];
-      while (node->next != NULL) {
-        node = node->next;
-      }
-      node->next = new_node;
-      new_node->previous = node;
-      new_node->head = (*hash_table)->heads[hashVal];
-      strcpy(new_node->word, word);
-    }
+    hash_table->heads[hashVal] = node;
+    //printf("node->word >%s\n\n", node->word);
   }
+  else {
+    node = hash_table->heads[hashVal];
+    //printf("REPEATED word> %s hashVal> %i filledby> %s \n\n", word, hashVal, &node->word);
+  }
+
 
   return node;
 }
@@ -444,6 +423,21 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
   //
   // complete this
   //
+
+  const hash_table_node_t * from = find_word(hash_table, from_word, 1), * to = find_word(hash_table, to_word, 1);
+  fprintf(stderr,"\nFROM and TO nodes founds~\n");
+
+  hash_table_node_t  * node ;
+  char *word_chan ;
+  unsigned int i ;
+    printf("Hash code --> %u ", index);
+
+  //Iterate for each index of the hash-table (like an array)
+  for(i = 0u;i < hash_table->hash_table_size;i++)
+    for(node = hash_table->heads[i];node != NULL;node = node->next)
+        //strcpy( word_chan , node->word);
+        printf("\n\\ Word --> %s | %u  <-- Hash Code // \n", node->word, index);
+    
 }
 
 
@@ -458,21 +452,30 @@ static void graph_info(hash_table_t *hash_table)
   //
 }
 
+// Point --> +) add code to get some statistical data about the hash table
+// Hash table info 🠗🠗🠗
+
+static void hash_table_data(hash_table_t *hash_table){
+  hash_table_t *info = hash_table;
+  const unsigned int entries = info -> number_of_entries ,
+  edges = info -> number_of_edges , size = info -> hash_table_size ,
+  heads = sizeof( info -> heads );
+
+  printf("\n---[Hash Table Data]---\n");
+  printf("\nSize : %u",size);
+  printf("\nNumber of entries : %u", heads);
+  printf("\nTotal of heads : %u", entries);
+  printf(" ||  Total of edges : %u\n",edges);
+  printf("\n---[Hash Table Data]---\n");
+
+
+}
+
 
 //
 // main program
 //
 
-
-  // USAR VALGRIND PARA VER QUANTOS MALLOCS FICAM E COMPARAR COM OS FREES
-
-
-  //for (int x = 0; x < hash_table->hash_table_size; x++) {
-  //  if (x % 6 == 0) {
-  //    printf("\n");
-  //  }
-  //    printf("[%i] > %i\t", x, hash_table->heads[x]);
-  //}
 
   //for (int x = 0; x < hash_table->hash_table_size; x++) {
   //  if (hash_table->heads[x] != 0) {
@@ -492,6 +495,13 @@ int main(int argc,char **argv)
   // initialize hash table
   hash_table = hash_table_create();
 
+  for (int x = 0; x < hash_table->hash_table_size; x++) {
+    if (x % 6 == 0) {
+      printf("\n");
+    }
+      printf("[%i] > %i\t", x, hash_table->heads[x]);
+  }
+
   // read words
   fp = fopen((argc < 2) ? "wordlist-big-latest.txt" : argv[1],"rb");
   if(fp == NULL)
@@ -499,39 +509,33 @@ int main(int argc,char **argv)
     fprintf(stderr,"main: unable to open the words file\n");
     exit(1);
   }
-    
-  int num_entries_inicial = 0;
+
+  //Save each word in the hash_table  
   while(fscanf(fp,"%99s",word) == 1) {
-    (void)find_word(&hash_table,word,1);
-    num_entries_inicial++;
+    printf("word >%s\n", word);
+    (void)find_word(hash_table,word,1);
   }
   fclose(fp);
 
-  int num_entries = 0;
-  for (int x = 0u; x < hash_table->hash_table_size; x++) {
-    if(hash_table->heads[x] == NULL) {
-      continue;
-    }
-    printf("[%4i] > ", x);
-    for(node = hash_table->heads[x];node != NULL;node = node->next) {
-      printf("   %s", node->word);
-      num_entries++;
-    }
-    printf("\n");
-  }
 
-  printf("num_entries_inicial > %i\n", num_entries_inicial);
-  printf("num_entries > %i\n", num_entries);
-  return 0;
+  //return 0;
 
   // find all similar words
   for(i = 0u;i < hash_table->hash_table_size;i++)
     for(node = hash_table->heads[i];node != NULL;node = node->next)
       similar_words(hash_table,node);
   graph_info(hash_table);
+
+  
+
+  fprintf(stderr,"\nReaches here~\n");
+
   // ask what to do
   for(;;)
   {
+    //Print in each modification 
+    //the static data from the hash table 🠗🠗🠗
+    hash_table_data(hash_table);
     fprintf(stderr,"Your wish is my command:\n");
     fprintf(stderr,"  1 WORD       (list the connected component WORD belongs to)\n");
     fprintf(stderr,"  2 FROM TO    (list the shortest path from FROM to TO)\n");
