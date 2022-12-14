@@ -169,7 +169,7 @@ static hash_table_t *hash_table_create(void)
     exit(1);
   }
 
-  hash_table->hash_table_size = 100;
+  hash_table->hash_table_size = 200;
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
 
@@ -224,10 +224,6 @@ static void hash_table_free(hash_table_t *hash_table)
       node = node->next;
     }
 
-    while (node->previous != NULL) {
-      node = node->previous;
-      free_hash_table_node(node->next);
-    }
     free_hash_table_node(node);
   }
   free(hash_table);
@@ -245,12 +241,12 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
     hash_table_grow(&(*hash_table));
   }
 
+
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
   // Se o node não existir e se a operação for de insert
   if (insert_if_not_found == 1) {
     if ((*hash_table)->heads[hashVal] == NULL) {
-      node->head = node;
       node->next = NULL;
       node->previous = NULL;
       strcpy(node->word, word);
@@ -267,10 +263,17 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
         node = node->next;
       }
       node->next = new_node;
-      new_node->previous = node;
-      new_node->head = (*hash_table)->heads[hashVal];
       strcpy(new_node->word, word);
+      node = new_node;
     }
+  }
+
+  else {
+      node = (*hash_table)->heads[hashVal];
+      while (node->next != NULL) {
+        node = node->next;
+      }
+      printf("NODE_FOUND >%s\n", node->word);
   }
 
   return node;
@@ -297,11 +300,19 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 {
   hash_table_node_t *to,*from_representative,*to_representative;
   adjacency_node_t *link;
+  
+  printf("NODE_WORD >%s\n", word);
 
-  to = find_word(hash_table,word,0);
-  //
-  // complete this
-  //
+  to = find_word(&hash_table,word,0);
+
+  to->previous = from;
+
+  while(from->previous != NULL) {
+    from = from->previous;
+  }
+
+  to->head = from;
+
 }
 
 
@@ -500,35 +511,33 @@ int main(int argc,char **argv)
     exit(1);
   }
     
-  int num_entries_inicial = 0;
   while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(&hash_table,word,1);
-    num_entries_inicial++;
   }
   fclose(fp);
 
-  int num_entries = 0;
   for (int x = 0u; x < hash_table->hash_table_size; x++) {
     if(hash_table->heads[x] == NULL) {
-      continue;
+      //continue;
     }
     printf("[%4i] > ", x);
     for(node = hash_table->heads[x];node != NULL;node = node->next) {
       printf("   %s", node->word);
-      num_entries++;
     }
     printf("\n");
   }
 
-  printf("num_entries_inicial > %i\n", num_entries_inicial);
-  printf("num_entries > %i\n", num_entries);
-  return 0;
-
   // find all similar words
-  for(i = 0u;i < hash_table->hash_table_size;i++)
-    for(node = hash_table->heads[i];node != NULL;node = node->next)
+  for(i = 0u;i < hash_table->hash_table_size;i++){
+    for(node = hash_table->heads[i];node != NULL;node = node->next) {
+      printf("node->word >%s  \n", node->word);
       similar_words(hash_table,node);
+      printf("node->previous >%i\n", node->previous);
+    }
+  }
   graph_info(hash_table);
+
+
   // ask what to do
   for(;;)
   {
