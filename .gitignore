@@ -13,3 +13,6 @@
 
 #Ignore executable solutions for WORD_LADDER
 word_ladder
+
+# Ignore SpeedRun Files
+SpeedRun/
