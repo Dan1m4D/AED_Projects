@@ -186,6 +186,8 @@ static void hash_table_grow(hash_table_t **hash_table)
 {
   unsigned int hashVal;
   hash_table_t *temp_table;
+
+
   
   hash_table_node_t *node;
   node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
@@ -201,10 +203,12 @@ static void hash_table_grow(hash_table_t **hash_table)
   memset(temp_table->heads, NULL, temp_table->hash_table_size*sizeof(temp_table->heads));
   
   for (unsigned int i = 0u; i < (*hash_table)->hash_table_size; i++) { 
-    node = (*hash_table)->heads[i];
-    if (node != NULL) {
-      (void)find_word(&temp_table,node->word,1);
+    if ((*hash_table)->heads[i] != NULL) {    
+      for(node = (*hash_table)->heads[i];node != NULL;node = node->next) {
+        (void)find_word(&temp_table,node->word,1);
+      }
     }
+
   }
 
   (*hash_table) = temp_table;
@@ -243,32 +247,30 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
 
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
-  //printf("entries > %i\n", hash_table->number_of_entries);
-
   // Se o node não existir e se a operação for de insert
-  if ((*hash_table)->heads[hashVal] == NULL && insert_if_not_found == 1) {
-    if ((*hash_table)->number_of_entries == (*hash_table)->hash_table_size) {
-      fprintf(stderr,"find_word: out of space on the table\n");
-    }
-    node->next = NULL;
-    node->previous = NULL;
-    strcpy(node->word, word);
+  if (insert_if_not_found == 1) {
+    if ((*hash_table)->heads[hashVal] == NULL) {
+      node->head = node;
+      node->next = NULL;
+      node->previous = NULL;
+      strcpy(node->word, word);
 
-    (*hash_table)->heads[hashVal] = node;
-    (*hash_table)->number_of_entries++;
-  }
-  else {
-    hash_table_node_t *new_node;
-    new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
-
-    node = (*hash_table)->heads[hashVal];
-    while (node->next != NULL) {
-      node = node->next;
+      (*hash_table)->heads[hashVal] = node;
+      (*hash_table)->number_of_entries++;
     }
-    node->next = new_node;
-    new_node->previous = node;
-    new_node->head = node;
-    strcpy(new_node->word, word);
+    else {
+      hash_table_node_t *new_node;
+      new_node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+
+      node = (*hash_table)->heads[hashVal];
+      while (node->next != NULL) {
+        node = node->next;
+      }
+      node->next = new_node;
+      new_node->previous = node;
+      new_node->head = (*hash_table)->heads[hashVal];
+      strcpy(new_node->word, word);
+    }
   }
 
   return node;
@@ -498,19 +500,28 @@ int main(int argc,char **argv)
     exit(1);
   }
     
+  int num_entries_inicial = 0;
   while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(&hash_table,word,1);
+    num_entries_inicial++;
   }
   fclose(fp);
 
+  int num_entries = 0;
   for (int x = 0u; x < hash_table->hash_table_size; x++) {
+    if(hash_table->heads[x] == NULL) {
+      continue;
+    }
     printf("[%4i] > ", x);
-      for(node = hash_table->heads[x];node != NULL;node = node->next) {
+    for(node = hash_table->heads[x];node != NULL;node = node->next) {
       printf("   %s", node->word);
-      }
+      num_entries++;
+    }
     printf("\n");
   }
 
+  printf("num_entries_inicial > %i\n", num_entries_inicial);
+  printf("num_entries > %i\n", num_entries);
   return 0;
 
   // find all similar words
