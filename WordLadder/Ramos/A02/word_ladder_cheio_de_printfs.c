@@ -56,13 +56,14 @@
 // data structures (SUGGESTION --- you may do it in a different way)
 //
 
+// GRAPH RELATED - dm
 typedef struct adjacency_node_s  adjacency_node_t;
 typedef struct hash_table_node_s hash_table_node_t;
 typedef struct hash_table_s      hash_table_t;
 
 struct adjacency_node_s
 {
-  adjacency_node_t *next;            // link to th enext adjacency list node
+  adjacency_node_t *next;            // link to the next adjacency list node
   hash_table_node_t *vertex;         // the other vertex
 };
 

@@ -5,8 +5,6 @@
 //
 // Place your student numbers and names here
 //   N.Mec. 107348  Name: Pedro Ramos
-//   N.Mec. 107603  Name: Daniel Madureira
-//   N.Mec. 105925  Name: Rafael Kauati
 //
 // Do as much as you can
 //   1) MANDATORY: complete the hash table code
@@ -58,13 +56,14 @@
 // data structures (SUGGESTION --- you may do it in a different way)
 //
 
+// GRAPH RELATED - dm
 typedef struct adjacency_node_s  adjacency_node_t;
 typedef struct hash_table_node_s hash_table_node_t;
 typedef struct hash_table_s      hash_table_t;
 
 struct adjacency_node_s
 {
-  adjacency_node_t *next;            // link to th enext adjacency list node
+  adjacency_node_t *next;            // link to the next adjacency list node
   hash_table_node_t *vertex;         // the other vertex
 };
 
@@ -88,7 +87,7 @@ struct hash_table_s
   unsigned int hash_table_size;      // the size of the hash table array
   unsigned int number_of_entries;    // the number of entries in the hash table
   unsigned int number_of_edges;      // number of edges (for information purposes only)
-  hash_table_node_t **heads;         // the heads of the linked lists
+  hash_table_node_t **heads;         // the heads of the linked lists ->  Hash values array
 };
 
 
@@ -165,17 +164,22 @@ static hash_table_t *hash_table_create(void)
   hash_table_t *hash_table;
 
   hash_table = (hash_table_t *)malloc(sizeof(hash_table_t));
-  if(hash_table == NULL)
+
+  // check if hashTable creation succeded
+  if(hash_table == NULL)      
   {
     fprintf(stderr,"create_hash_table: out of memory\n");
     exit(1);
   }
 
-  hash_table->hash_table_size = 1000;
+  //create hashTable by filling its' attributes
+  hash_table->hash_table_size = 100;
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
 
-  hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
+  // allocate memory for heads array
+  hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));
+  // set all heads values(aka hashcodes) to NULL  
   memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(hash_table->heads));
 
   return hash_table;
@@ -184,19 +188,22 @@ static hash_table_t *hash_table_create(void)
   // A completar
 static void hash_table_grow(hash_table_t *hash_table)
 {
+  //create temporary hash Table
   hash_table_t *temp_table;
   temp_table = hash_table_create();
 
   temp_table = hash_table;
-  temp_table->hash_table_size = temp_table->hash_table_size*2;
+  temp_table->hash_table_size = hash_table->hash_table_size*2;
+  
+  printf("hash_table_size >%s\n\n", hash_table->hash_table_size);
 
   for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
-    hash_table_node_t *node = &hash_table->heads[i];
-    //find_word(temp_table,node->word,1);
+    hash_table_node_t *node = hash_table->heads[i];
+    printf("word to copy >%s", node->word);
+    (void)find_word(temp_table,node->word,1);
   }
 
   hash_table = temp_table;
-  free(temp_table);
 
   // hash_table = (hash_table_t *) realloc(hash_table, sizeof(hash_table_t));
 }
@@ -218,41 +225,56 @@ static void hash_table_free(hash_table_t *hash_table)
 }
 
   // A completar
-static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,int insert_if_not_found)
+static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found)
 {
   unsigned int hashVal;
-  hash_table_node_t *node;
-  node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
+  hash_table_node_t *node = allocate_hash_table_node();
 
-  if (hash_table->number_of_entries >= hash_table->hash_table_size / 2) {
-    hash_table_grow(hash_table);
+  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
+    hash_table_grow(&(*hash_table));
   }
 
-  hashVal = crc32(word) % hash_table->hash_table_size;
-
-  //printf("entries > %i\n", hash_table->number_of_entries);
-  printf("heads[%i]> |%i|\n", hashVal, hash_table->heads[hashVal]);
-  printf("t/f > %d\n", hash_table->heads[hashVal] == NULL && insert_if_not_found == 1);
-
+  hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
   // Se o node não existir e se a operação for de insert
-  if (hash_table->heads[hashVal] == NULL && insert_if_not_found == 1) {
-    if (hash_table->number_of_entries == hash_table->hash_table_size) {
-      fprintf(stderr,"find_word: out of space on the table\n");
-    }
-    node->head = hash_table->heads[hashVal];
-    node->next = NULL;
-    node->previous = NULL;
-    strcpy(node->word, word);
+  if (insert_if_not_found == 1) {
+    if ((*hash_table)->heads[hashVal] == NULL) {
+      node->next = NULL;
+      node->previous = NULL;
+      strcpy(node->word, word);
 
-    hash_table->heads[hashVal] = node;
-    printf("node->word >%s\n\n", node->word);
+      (*hash_table)->heads[hashVal] = node;
+      (*hash_table)->number_of_entries++;
+    }
+    else {
+      hash_table_node_t *new_node = allocate_hash_table_node();
+
+      node = (*hash_table)->heads[hashVal];
+      while (node->next != NULL) {
+        node = node->next;
+      }
+      node->next = new_node;
+      strcpy(new_node->word, word);
+      node = new_node;
+    }
   }
   else {
-    node = hash_table->heads[hashVal];
-    printf("REPEATED word> %s hashVal> %i filledby> %s \n\n", word, hashVal, &node->word);
+    if ((*hash_table)->heads[hashVal] != NULL) {
+      node = (*hash_table)->heads[hashVal];
+      while (node->next != NULL) {      
+        if (strcmp(node->word, word)==0) {
+          return node;
+        }
+        else {
+          node = node->next;
+        }
+      }
+      return NULL;
+    }
+    else {
+      return NULL;
+    }
   }
-
 
   return node;
 }
@@ -278,11 +300,25 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 {
   hash_table_node_t *to,*from_representative,*to_representative;
   adjacency_node_t *link;
+  
+  to = allocate_hash_table_node();
+  to = find_word(&hash_table,word,0);
 
-  to = find_word(hash_table,word,0);
-  //
-  // complete this
-  //
+  if (to == NULL) {
+    return;
+  }
+
+  to->previous = from;
+
+  printf("Final >%s  |  Penultima >%s  |  ", to->word, from->word);
+
+  while(from->previous != NULL) {
+    from = from->previous;
+    printf("next >%s  |  ", from->word);
+  }
+  printf("\n");
+  to->head = from;
+  return;
 }
 
 
@@ -292,7 +328,7 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 // man utf8 for details on the uft8 encoding
 //
 
-static void break_utf8_string(const char *word,int *individual_characters)
+static void break_utf8_string(const char *word,int *individual_characters)  //Converts a word from UTF8 to unicode chars
 {
   int byte0,byte1;
 
@@ -315,7 +351,7 @@ static void break_utf8_string(const char *word,int *individual_characters)
   *individual_characters = 0; // mark the end!
 }
 
-static void make_utf8_string(const int *individual_characters,char word[_max_word_size_])
+static void make_utf8_string(const int *individual_characters,char word[_max_word_size_]) //convertes a word from unicode to UTF8
 {
   int code;
 
@@ -445,6 +481,16 @@ static void graph_info(hash_table_t *hash_table)
 //
 
 
+  // USAR VALGRIND PARA VER QUANTOS MALLOCS FICAM E COMPARAR COM OS FREES
+
+
+  //for (int x = 0; x < hash_table->hash_table_size; x++) {
+  //  if (x % 6 == 0) {
+  //    printf("\n");
+  //  }
+  //    printf("[%i] > %i\t", x, hash_table->heads[x]);
+  //}
+
   //for (int x = 0; x < hash_table->hash_table_size; x++) {
   //  if (hash_table->heads[x] != 0) {
   //    printf("[%i] > %i\n", x, hash_table->heads[x]);
@@ -463,12 +509,6 @@ int main(int argc,char **argv)
   // initialize hash table
   hash_table = hash_table_create();
 
-  for (int x = 0; x < hash_table->hash_table_size; x++) {
-    if (x % 6 == 0) {
-      printf("\n");
-    }
-      printf("[%i] > %i\t", x, hash_table->heads[x]);
-  }
 
   // read words
   fp = fopen((argc < 2) ? "wordlist-big-latest.txt" : argv[1],"rb");
@@ -484,6 +524,12 @@ int main(int argc,char **argv)
   }
   fclose(fp);
 
+  for (int x = 0; x < hash_table->hash_table_size; x++) {
+    if (x % 4 == 0) {
+      printf("\n");
+    }
+      printf(" | [%4i] > %10i\t", x, hash_table->heads[x]);
+  }
 
   return 0;
 
