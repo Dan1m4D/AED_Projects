@@ -16,3 +16,6 @@ word_ladder
 
 # Ignore SpeedRun Files
 SpeedRun/
+
+# Ignore Valgrind Files
+vgcore.*
