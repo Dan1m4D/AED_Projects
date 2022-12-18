@@ -128,8 +128,16 @@ static hash_table_node_t *allocate_hash_table_node(void)
   return node;
 }
 
-static void free_hash_table_node(hash_table_node_t *node)
-{
+static void free_hash_table_node(hash_table_node_t *node) {
+  adjacency_node_t *adj_crawler = node->head;
+  adjacency_node_t *adj_before;
+  while(adj_crawler != NULL) {
+    adj_before = adj_crawler;
+    adj_crawler = adj_crawler->next;
+    free_adjacency_node(adj_before);
+  }
+  free_adjacency_node(adj_crawler);
+
   free(node);
 }
 
@@ -268,8 +276,9 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
   // Se o node não existir e se a operação for de insert
   if (insert_if_not_found == 1) {
     hash_table_node_t *node = allocate_hash_table_node();
-    if ((*hash_table)->heads[hashVal] == NULL) {
       node->next = NULL;
+      node->head = NULL;
+    if ((*hash_table)->heads[hashVal] == NULL) {
       strcpy(node->word, word);
 
       (*hash_table)->heads[hashVal] = node;
@@ -283,7 +292,6 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
         last_node = last_node->next;
       }
       last_node->next = node;
-      node->next = NULL;
       strcpy(node->word, word);
     }
     return NULL;
@@ -333,13 +341,48 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
     return;
   }
 
-  to->previous = from;
 
-  while(from->previous != NULL) {
-    from = from->previous;
-    totalEdges++;
+  adjacency_node_t *new_link0 = allocate_adjacency_node();
+
+  // Adicionar link ao node from
+  new_link0->vertex = to;
+  new_link0->next = NULL;
+  link = from->head;
+
+  if(link == NULL) {
+    from->head = new_link0;
   }
-  to->head = from;
+  else {
+    while(link->next != NULL) {
+      link = link->next;
+    }
+    link->next = new_link0;
+  }
+
+  // Adicionar link ao node to
+  //adjacency_node_t *new_link1 = allocate_adjacency_node();
+  //new_link1->vertex = from;
+  //new_link1->next = NULL;
+  //link = to->head;
+  //if(link == NULL) {
+  //  to->head = new_link1;
+  //}
+  //else {
+  //  while(link->next != NULL) {      
+  //    link = link->next;
+  //  }
+  //  link->next = new_link1;
+  //}
+
+
+  //to->previous = from;
+
+  //while(from->previous != NULL) {
+  //  from = from->previous;
+  //  totalEdges++;
+  //}
+  //to->head = from;
+  
   return;
 }
 
@@ -448,11 +491,32 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
 // list all vertices belonging to a connected component (complete this)
 //
 
-static void list_connected_component(hash_table_t *hash_table,const char *word)
+static void list_connected_component(hash_table_t *hash_table,const char *word, int numSpaces)
 {
-  //
-  // complete this
-  //
+  hash_table_node_t *node = find_word(&hash_table, word, 0);
+  if (node == NULL) {  
+    //printf("Essa palávra não tem componentes conexos!\n");
+    return;
+  }
+  if (node->head == NULL) {
+      printf("\n");
+    //printf("Essa palávra não tem componentes conexos!\n");
+    return;
+  }
+
+  hash_table_node_t *displayNode;
+  for(adjacency_node_t *link = node->head; link->next != NULL; link = link->next) {
+    displayNode = link->vertex;
+    printf(" -> %-8s", displayNode->word);
+    list_connected_component(hash_table, displayNode->word, numSpaces+1);
+    if (find_word(&hash_table, displayNode->word, 0)->head == NULL) {
+      printf("\n");
+      for (int i = 1; i<numSpaces; i++) {
+        printf("%12s", " ");
+      }
+      printf("%12s", " |");
+    }
+  }
 }
 
 
@@ -519,6 +583,19 @@ static void graph_info(hash_table_t *hash_table)
   //  }
   //}
 
+void progressBar(int percent) {
+    printf("\r├");
+    for (int x = 0; x < percent-1; x++) {
+      printf("■");
+    }
+    printf("▶");
+    for (int x = percent; x < 100; x++) {
+      printf("─");
+    }
+    printf("┤├%3i%┤ ", percent);
+    fflush(stdout);
+}
+
 int main(int argc,char **argv)
 {
   char word[100],from[100],to[100];
@@ -541,43 +618,50 @@ int main(int argc,char **argv)
   
   int countTotal=0;
   int countSaved=0;
+  int percent=0;
 
+  printf("\nFilling up the hash table...\n");
   while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(&hash_table,word,1);
     countTotal++;
+    percent = (int) (hash_table->number_of_entries * 100 / (hash_table->hash_table_size / 2));
+    progressBar(percent);
   }
   fclose(fp);
 
-  for (int x = 0u; x < hash_table->hash_table_size; x++) {
-    if(hash_table->heads[x] == NULL) {
-      //continue;
-    }
-    printf("[%4i] > ", x);
-    for(node = hash_table->heads[x];node != NULL;node = node->next) {
-      printf("   %s", node->word);
-      countSaved++;
-    }
-    printf("\n");
-  }
+  percent = 100;
+  progressBar(percent);
+  printf("\n");
 
+  printf("\nConnecting all the nodes...\n");
+  percent = 0;
   // find all similar words
   for(i = 0u;i < hash_table->hash_table_size;i++) {
+    //printf("\rTable node a scannar > %7i de %7i", i, hash_table->hash_table_size);
+    percent = (int) (i * 100 / hash_table->hash_table_size);
+    progressBar(percent);
     for(node = hash_table->heads[i];node != NULL;node = node->next) {
       similar_words(hash_table,node);
     }
   }
+
+  percent = 100;
+  progressBar(percent);
+  printf("\n");
+
   graph_info(hash_table);
 
-  printf("\nTotal >%i   |   Saved >%i\n\n", countTotal, countSaved);
-  printf("\nTotal Edges >%i", totalEdges);
+
 
   // ask what to do
   for(;;)
   {
     fprintf(stderr,"Your wish is my command:\n");
-    fprintf(stderr,"  1 WORD       (list the connected component WORD belongs to)\n");
-    fprintf(stderr,"  2 FROM TO    (list the shortest path from FROM to TO)\n");
-    fprintf(stderr,"  3            (terminate)\n");
+    fprintf(stderr,"  1 WORD                (list the connected component WORD belongs to)\n");
+    fprintf(stderr,"  2 FROM TO             (list the shortest path from FROM to TO)\n");
+    fprintf(stderr,"  3 DISPLAY HASH TABLE  (display the hash table and apropriate info)\n");
+    fprintf(stderr,"  4 DISPLAY GRAPH INFO  (display the graph info)\n");
+    fprintf(stderr,"  5            (terminate)\n");
     fprintf(stderr,"> ");
     if(scanf("%99s",word) != 1)
       break;
@@ -586,7 +670,8 @@ int main(int argc,char **argv)
     {
       if(scanf("%99s",word) != 1)
         break;
-      list_connected_component(hash_table,word);
+      printf("\n -> %-8s", word);
+      list_connected_component(hash_table,word, 0);
     }
     else if(command == 2)
     {
@@ -597,6 +682,34 @@ int main(int argc,char **argv)
       path_finder(hash_table,from,to);
     }
     else if(command == 3)
+    {
+      for (int x = 0u; x < hash_table->hash_table_size; x++) {
+        printf("[%4i]", x);
+        for(node = hash_table->heads[x];node != NULL;node = node->next) {
+          printf(" -> %s", node->word);
+          countSaved++;
+        }
+        printf("\n");
+      }
+      printf("\nTotal Words > %i  |  Saved Words > %i\n\n", countTotal, countSaved);
+      countSaved = 0;
+    }
+    else if(command == 4)
+    {
+      for (int x = 0u; x < 100; x++) {
+        if(hash_table->heads[x] == NULL) {
+          continue;
+        }
+        for(node = hash_table->heads[x];node != NULL;node = node->next) {
+          list_connected_component(hash_table, node->word, 0);
+        }
+        printf("\n");
+      }
+
+      printf("\nNumber of Edges > %i\n", totalEdges);
+      printf("Number of connected components (graphs) > %i\n\n", 0);
+    }
+    else if(command == 5)
       break;
   }
   // clean up
