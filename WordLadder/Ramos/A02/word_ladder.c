@@ -9,14 +9,14 @@
 //
 // Do as much as you can
 //   1) MANDATORY: complete the hash table code
-//      *) hash_table_create
-//      *) hash_table_grow
-//      *) hash_table_free
-//      *) find_word
+//      *) hash_table_create        -> done
+//      *) hash_table_grow          -> done
+//      *) hash_table_free          -> done
+//      *) find_word                -> done
 //      +) add code to get some statistical data about the hash table
 //   2) HIGHLY RECOMMENDED: build the graph (including union-find data) -- use the similar_words function...
-//      *) find_representative
-//      *) add_edge
+//      *) find_representative      -> working on - dm
+//      *) add_edge                 -> done? (to be changed)
 //   3) RECOMMENDED: implement breadth-first search in the graph
 //      *) breadh_first_search
 //   4) RECOMMENDED: list all words belonginh to a connected component
@@ -561,6 +561,73 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
   //
   // complete this
   //
+
+
+  const hash_table_node_t  //* from = find_word(hash_table, from_word, 0)
+                           // * to   = find_word(hash_table, to_word,   0)
+                          * node ;
+
+  printf("\nErika says :\nLooking for the words between : FROM [%s] and TO [%s] ~", from_word , to_word);
+  
+  int from_found = 0 , to_found = 0 , entries_traveled = 0 , nodes_visited = 0;
+
+  for (int x = 0u; x < hash_table->hash_table_size; x++) {
+    //printf("[%4i] > ", x);
+    if(hash_table->heads[x] == NULL) {
+      continue;
+    }
+
+    
+    if(to_found == 1){
+      break;
+    }
+    
+    //printf("[%4i] > ", x);
+
+    for(node = hash_table->heads[x];node != NULL;node = node->next) {
+      //printf("   %s", node->word);
+      //printf("\n[%4u] :: |   %s   |", index , node->word);
+
+      if ( from_found != 1){
+        if ( strcmp ( from_word , node->word ) == 0 ){
+              printf("\n[%4u] :: |   %s   |", index , node->word);
+
+              //printf("\nFROM :  %s\n", node->word);
+              nodes_visited ++ ;
+              from_found = 1 ;
+              printf ("\nfrom found : %i ", from_found);  
+
+            }
+      }
+      else{
+        printf("\n[%u] :: |   %s   |", index , node->word);
+        nodes_visited ++ ;
+        if ( strcmp ( to_word , node->word ) == 0 ) {
+
+            printf("\nTO :  %s\n", node->word);
+            nodes_visited ++ ;
+            printf ("\nfrom to : %i ", to_found);
+            to_found = 1;
+            break;
+        }
+        
+        
+
+      }
+      
+      //node->visited = 0 ;
+    
+    }
+
+    entries_traveled ++;
+
+    //printf("\n");
+  }
+
+  printf("\nErika says :\nTotal of entries travaleds :\n%i",entries_traveled);
+  printf("\nErika says:\nTotal of nodes visited :\n%i\n",nodes_visited);
+
+
 }
 
 
