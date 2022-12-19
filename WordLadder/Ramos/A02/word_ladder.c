@@ -9,14 +9,14 @@
 //
 // Do as much as you can
 //   1) MANDATORY: complete the hash table code
-//      *) hash_table_create
-//      *) hash_table_grow
-//      *) hash_table_free
-//      *) find_word
+//      *) hash_table_create        -> done
+//      *) hash_table_grow          -> done
+//      *) hash_table_free          -> done
+//      *) find_word                -> done
 //      +) add code to get some statistical data about the hash table
 //   2) HIGHLY RECOMMENDED: build the graph (including union-find data) -- use the similar_words function...
-//      *) find_representative
-//      *) add_edge
+//      *) find_representative      -> working on - dm
+//      *) add_edge                 -> done? (to be changed)
 //   3) RECOMMENDED: implement breadth-first search in the graph
 //      *) breadh_first_search
 //   4) RECOMMENDED: list all words belonginh to a connected component
