@@ -278,6 +278,10 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
     hash_table_node_t *node = allocate_hash_table_node();
       node->next = NULL;
       node->head = NULL;
+      node->visited = 0;
+      node->representative = NULL;
+      node->number_of_edges = 0;
+      node->number_of_vertices = 0;
     if ((*hash_table)->heads[hashVal] == NULL) {
       strcpy(node->word, word);
 
@@ -330,24 +334,27 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
 }
 
   // A completar
+
+int showed4 = 0;
 static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
 {
   hash_table_node_t *to,*from_representative,*to_representative;
   adjacency_node_t *link;
-  
   to = find_word(&hash_table,word,0);
 
-  if (to == NULL) {
+  if (to == NULL || to->visited == 1) {
     return;
   }
-
-
+  showed4++;
+  from->number_of_edges++;
+  from->number_of_vertices++;
   adjacency_node_t *new_link0 = allocate_adjacency_node();
 
   // Adicionar link ao node from
   new_link0->vertex = to;
   new_link0->next = NULL;
   link = from->head;
+  to->visited = 1;
 
   if(link == NULL) {
     from->head = new_link0;
@@ -464,10 +471,17 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
       individual_characters[i] = valid_characters[j];
       make_utf8_string(individual_characters,new_word);
       // avoid duplicate cases
-      if(strcmp(new_word,from->word) > 0)
+      if(strcmp(new_word,from->word) > 0){
         add_edge(hash_table,from,new_word);
+      }
     }
     individual_characters[i] = k;
+  }
+  if (from->head == NULL) {
+    return;
+  }
+  for(adjacency_node_t *link = from->head; link->next != NULL; link = link->next) {
+    link->vertex->visited = 0;
   }
 }
 
@@ -493,28 +507,28 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
 
 static void list_connected_component(hash_table_t *hash_table,const char *word, int numSpaces)
 {
+
   hash_table_node_t *node = find_word(&hash_table, word, 0);
   if (node == NULL) {  
+    printf("\n");
     //printf("Essa palávra não tem componentes conexos!\n");
     return;
   }
   if (node->head == NULL) {
+    printf("BIAS\n");
       printf("\n");
-    //printf("Essa palávra não tem componentes conexos!\n");
     return;
   }
 
-  hash_table_node_t *displayNode;
   for(adjacency_node_t *link = node->head; link->next != NULL; link = link->next) {
-    displayNode = link->vertex;
-    printf(" -> %-8s", displayNode->word);
-    list_connected_component(hash_table, displayNode->word, numSpaces+1);
-    if (find_word(&hash_table, displayNode->word, 0)->head == NULL) {
+    printf("╴> %-8s", link->vertex->word);
+    list_connected_component(hash_table, link->vertex->word, numSpaces+1);
+    if (find_word(&hash_table, link->vertex->word, 0)->head == NULL) {
       printf("\n");
       for (int i = 1; i<numSpaces; i++) {
         printf("%12s", " ");
       }
-      printf("%12s", " |");
+      printf("%12s", "╰");
     }
   }
 }
@@ -656,6 +670,7 @@ int main(int argc,char **argv)
   // ask what to do
   for(;;)
   {
+    printf("\n\n");
     fprintf(stderr,"Your wish is my command:\n");
     fprintf(stderr,"  1 WORD                (list the connected component WORD belongs to)\n");
     fprintf(stderr,"  2 FROM TO             (list the shortest path from FROM to TO)\n");
@@ -696,7 +711,7 @@ int main(int argc,char **argv)
     }
     else if(command == 4)
     {
-      for (int x = 0u; x < 100; x++) {
+      for (int x = 0u; x < hash_table->hash_table_size; x++) {
         if(hash_table->heads[x] == NULL) {
           continue;
         }
@@ -706,7 +721,8 @@ int main(int argc,char **argv)
         printf("\n");
       }
 
-      printf("\nNumber of Edges > %i\n", totalEdges);
+      printf("\nNumber of edges > %i\n", showed4);
+      printf("Number of Edges > %i\n", totalEdges);
       printf("Number of connected components (graphs) > %i\n\n", 0);
     }
     else if(command == 5)
