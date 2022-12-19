@@ -1,7 +1,10 @@
 # AED_Projects
 AED Project Repository for our awesome group 22/23
 
-
+# CHRTISTMAS TIME BITXH
+![PANDORUU](https://tenor.com/view/padoru-padoru-anime-run-fate-series-saber-nero-gif-15979862)
+### *TOS giing to ignore us*
+#### **sad noises**
 
 <img src="https://media.tenor.com/ufjlv3GDiXwAAAAC/kancolle-chewing.gif" width="150" height="230" />
 
