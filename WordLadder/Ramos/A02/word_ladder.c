@@ -259,6 +259,8 @@ static void hash_table_free(hash_table_t *hash_table)
     free_hash_table_node(crawler);  
   }
   free(hash_table->heads);
+  free(hash_table);
+  
   return;
 }
 
