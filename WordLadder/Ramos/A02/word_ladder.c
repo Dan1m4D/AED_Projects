@@ -1,7 +1,7 @@
 //
 // AED, November 2022 (Tomás Oliveira e Silva)
 //
-// Second practical assignement (speed run)
+// Second practical assignement (Word Ladder)
 //
 // Place your student numbers and names here
 //   N.Mec. 107348  Name:  Pedro Ramos
@@ -279,7 +279,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node->next = NULL;
       node->head = NULL;
       node->visited = 0;
-      node->representative = NULL;
+      node->representative = node;
       node->number_of_edges = 0;
       node->number_of_vertices = 0;
     if ((*hash_table)->heads[hashVal] == NULL) {
@@ -304,7 +304,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
     hash_table_node_t *node;
     if ((*hash_table)->heads[hashVal] != NULL) {
       node = (*hash_table)->heads[hashVal];
-      while (node->next != NULL) {      
+      while (node != NULL) {      
         if (strcmp(node->word, word)==0) {
           return node;
         }
@@ -326,12 +326,16 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
 static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
   hash_table_node_t *representative,*next_node;
-
-  //
-  // complete this
-  //
+  representative = node->representative;
+  // Mode to representative
+  while (representative->representative != representative) {
+    representative = representative->representative;    
+  }  
+  // Optimize the node, pointing it straight to the representative
+  node->representative = representative;
   return representative;
 }
+
 
   // A completar
 
@@ -345,9 +349,37 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   if (to == NULL || to->visited == 1) {
     return;
   }
+
   showed4++;
   from->number_of_edges++;
   from->number_of_vertices++;
+
+  // Encontrar o representativo de cada node
+  from_representative = find_representative(from);
+  to_representative = find_representative(to);
+  to_representative->number_of_vertices++;
+
+  // Comparar os componentes conexos de cada node para decidir qual componente conexo prevalece na sua junção
+  if (from_representative->number_of_vertices > to_representative->number_of_vertices) {
+    to->representative = from_representative;
+    from_representative->number_of_vertices += to_representative->number_of_vertices;
+  }
+  else if (from_representative->number_of_vertices < to_representative->number_of_vertices) {
+    from->representative = to_representative;
+    to_representative->number_of_vertices += from_representative->number_of_vertices;
+  }
+  else {
+    if (strcmp(from_representative->word, to_representative->word) > 0) {
+      to->representative = from_representative;
+      from_representative->number_of_vertices += to_representative->number_of_vertices;
+    }
+    else {
+      from->representative = to_representative;
+      to_representative->number_of_vertices += from_representative->number_of_vertices;
+    }
+  }
+
+
   adjacency_node_t *new_link0 = allocate_adjacency_node();
 
   // Adicionar link ao node from
@@ -355,7 +387,6 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   new_link0->next = NULL;
   link = from->head;
   to->visited = 1;
-
   if(link == NULL) {
     from->head = new_link0;
   }
@@ -367,19 +398,19 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   }
 
   // Adicionar link ao node to
-  //adjacency_node_t *new_link1 = allocate_adjacency_node();
-  //new_link1->vertex = from;
-  //new_link1->next = NULL;
-  //link = to->head;
-  //if(link == NULL) {
-  //  to->head = new_link1;
-  //}
-  //else {
-  //  while(link->next != NULL) {      
-  //    link = link->next;
-  //  }
-  //  link->next = new_link1;
-  //}
+  adjacency_node_t *new_link1 = allocate_adjacency_node();
+  new_link1->vertex = from;
+  new_link1->next = NULL;
+  link = to->head;
+  if(link == NULL) {
+    to->head = new_link1;
+  }
+  else {
+    while(link->next != NULL) {      
+      link = link->next;
+    }
+    link->next = new_link1;
+  }
 
 
   //to->previous = from;
@@ -492,7 +523,7 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 // returns the number of vertices visited; if the last one is goal, following the previous links gives the shortest path between goal and origin
 //
 
-static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
+static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
 {
   //
   // complete this
@@ -510,18 +541,21 @@ static void list_connected_component(hash_table_t *hash_table,const char *word, 
 
   hash_table_node_t *node = find_word(&hash_table, word, 0);
   if (node == NULL) {  
-    printf("\n");
-    //printf("Essa palávra não tem componentes conexos!\n");
+    printf("NODE não existe!!  word> |%s|\n", word);
     return;
   }
   if (node->head == NULL) {
-    printf("BIAS\n");
-      printf("\n");
+    printf("HEAD is null word> |%s|\n", word);
     return;
   }
 
-  for(adjacency_node_t *link = node->head; link->next != NULL; link = link->next) {
-    printf("╴> %-8s", link->vertex->word);
+  node->visited = 1;
+
+  for(adjacency_node_t *link = node->head; link!= NULL; link = link->next) {
+    if (link->vertex->visited == 1) {
+      continue;
+    }
+    printf("Nivel [%i] ╴> %-8s\n", numSpaces ,link->vertex->word);
     list_connected_component(hash_table, link->vertex->word, numSpaces+1);
     if (find_word(&hash_table, link->vertex->word, 0)->head == NULL) {
       printf("\n");
@@ -716,9 +750,13 @@ int main(int argc,char **argv)
           continue;
         }
         for(node = hash_table->heads[x];node != NULL;node = node->next) {
-          list_connected_component(hash_table, node->word, 0);
+          hash_table_node_t* representative = find_representative(node);
+          if (representative->visited == 0 && representative->number_of_vertices > 3) {
+            printf("\nREPRESENTATIVE -> %s:\n", representative->word);
+            list_connected_component(hash_table, representative->word, 0);
+            representative->visited = 1;
+          }
         }
-        printf("\n");
       }
 
       printf("\nNumber of edges > %i\n", showed4);
