@@ -90,6 +90,77 @@ struct hash_table_s
   hash_table_node_t **heads;         // the heads of the linked lists ->  Hash values array
 };
 
+//
+// queue structure and methods for breath_first_serach
+//
+
+typedef struct queue_type Queue;
+/* typedef struct qnode_type QNode;
+
+struct QNode{
+  adjacency_node_t item;
+  QNode *next;
+}; */
+
+struct queue_type {
+  int size;             // size of the queue
+  void **inp_arr;       // pointer to the queue's array
+  int *Front;           // pointer to the front of the queue
+  int *Back;            // pointer to the back of the queue
+};
+
+static Queue *create_queue(int size){
+  // creates a queue of hash_table_nodes_t with SIZE positions
+  Queue *queue;
+
+  queue = malloc(sizeof(queue));
+
+  // check if queue creation was suceeded
+  if(queue == NULL)      
+  {
+    fprintf(stderr,"create_queue: out of memory\n");
+    exit(1);
+  }
+
+  // fill queue attributes
+  queue->size = size;
+  queue->Front = -1;
+  queue->Back = -1;
+
+  // allocate memory for queue input array(inp_arr)
+  queue->inp_arr = (adjacency_node_t *)malloc(queue->size*sizeof(adjacency_node_t));
+  // fill inp_arr with NULL
+  memset(queue->inp_arr, NULL, queue->size*sizeof(adjacency_node_t));
+
+  return queue;
+};
+
+void free_queue(Queue *queue){
+  // frees allocated memory to queue->inp_arr and queue
+  free(queue->inp_arr);
+  free(queue);
+};
+
+// queue methods
+
+void enqueue(Queue *queue, adjacency_node_t *node){
+  int insert_item;
+    if (queue->Back == queue->size - 1)
+       printf("Overflow \n");
+    else{
+        if (queue->Front == - 1){
+          queue->Front = 0;
+        }
+      
+        Back = Back + 1;
+        inp_arr[Back] = insert_item;
+    }
+}
+
+
+
+
+
 
 //
 // allocation and deallocation of linked list nodes (done)
@@ -415,9 +486,20 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 
 static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
 {
-  //
-  // complete this
-  //
+  // Recebe o numero maximo de vertices, uma lista dos vertices(GRAFO A PERCORRER), a root e o objetivo
+  hash_table_node_t *visited_vertices[maximum_number_of_vertices];
+  hash_table_node_t *queue[maximum_number_of_vertices];
+  hash_table_node_t **path[maximum_number_of_vertices];
+
+  origin->visited = 1;
+  visited_vertices[0] = origin;
+  queue[0] = origin;
+
+  
+
+
+
+
   return -1;
 }
 
