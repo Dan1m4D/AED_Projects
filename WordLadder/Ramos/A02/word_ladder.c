@@ -50,7 +50,7 @@
 // static configuration
 //
 
-#define _max_word_size_  32
+#define _max_word_size_ 32
 
 
 
@@ -71,9 +71,9 @@ int largestComponent = 0;
 // data structures (SUGGESTION --- you may do it in a different way)
 //
 
-typedef struct adjacency_node_s  adjacency_node_t;
+typedef struct adjacency_node_s adjacency_node_t;
 typedef struct hash_table_node_s hash_table_node_t;
-typedef struct hash_table_s      hash_table_t;
+typedef struct hash_table_s hash_table_t;
 
 struct adjacency_node_s
 {
@@ -104,7 +104,6 @@ struct hash_table_s
   hash_table_node_t **heads;         // the heads of the linked lists
 };
 
-
 //
 // allocation and deallocation of linked list nodes (done)
 //
@@ -134,16 +133,18 @@ static hash_table_node_t *allocate_hash_table_node(void)
   node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
   if(node == NULL)
   {
-    fprintf(stderr,"allocate_hash_table_node: out of memory\n");
+    fprintf(stderr, "allocate_hash_table_node: out of memory\n");
     exit(1);
   }
   return node;
 }
 
-static void free_hash_table_node(hash_table_node_t *node) {
+static void free_hash_table_node(hash_table_node_t *node)
+{
   adjacency_node_t *adj_crawler = node->head;
   adjacency_node_t *adj_before;
-  while(adj_crawler != NULL) {
+  while(adj_crawler != NULL)
+  {
     adj_before = adj_crawler;
     adj_crawler = adj_crawler->next;
     free_adjacency_node(adj_before);
@@ -153,11 +154,9 @@ static void free_hash_table_node(hash_table_node_t *node) {
   free(node);
 }
 
-
 //
 // hash table stuff (mostly to be done)
 //
-
 unsigned int crc32(const char *str)
 {
   static unsigned int table[256];
@@ -180,7 +179,6 @@ unsigned int crc32(const char *str)
   return crc;
 }
 
-  // A completar
 static hash_table_t *hash_table_create(void)
 {
   hash_table_t *hash_table;
@@ -197,15 +195,14 @@ static hash_table_t *hash_table_create(void)
   hash_table->number_of_edges = 0;
 
   hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
-  //hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(hash_table->heads));  
   memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(hash_table->heads));
 
   return hash_table;
 }
-static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found);
 
+static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found);
 static void hash_table_free(hash_table_t *hash_table);
-  // A completar
+
 static void hash_table_grow(hash_table_t *hash_table)
 {
   unsigned int hashVal;  
@@ -218,15 +215,19 @@ static void hash_table_grow(hash_table_t *hash_table)
   hash_table_node_t **new_heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
   memset(new_heads, NULL, hash_table->hash_table_size*sizeof(unsigned int*));
   
-  for (unsigned int i = 0u; i < hash_table->hash_table_size/2; i++) { 
-    if (hash_table->heads[i] != NULL) {   
+  for (unsigned int i = 0u; i < hash_table->hash_table_size/2; i++)
+  { 
+    if (hash_table->heads[i] != NULL)
+    {   
       node = hash_table->heads[i];
-      while(node != NULL) {
+      while(node != NULL)
+      {
       next_node = node->next;
 
         hashVal = crc32(node->word) % hash_table->hash_table_size;
 
-        if (new_heads[hashVal] == NULL) {
+        if (new_heads[hashVal] == NULL)
+        {
           node->next = NULL;
           new_heads[hashVal] = node;
         }
@@ -234,14 +235,15 @@ static void hash_table_grow(hash_table_t *hash_table)
           hash_table_node_t *last_node;
 
           last_node = new_heads[hashVal];
-          while (last_node->next != NULL) {
+          while (last_node->next != NULL)
+          {
             last_node = last_node->next;
           }
           last_node->next = node;
           node->next = NULL;
         }
 
-        node=next_node;
+        node = next_node;
       }
     }
   }
@@ -251,25 +253,26 @@ static void hash_table_grow(hash_table_t *hash_table)
   free(old_heads);
 }
 
-  // A completar
 static void hash_table_free(hash_table_t *hash_table)
 {
   hash_table_node_t *crawler;
   hash_table_node_t *node_before;
-  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
-
-    if (hash_table->heads[i] == NULL) {
+  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++)
+  {
+    if (hash_table->heads[i] == NULL)
+    {
       continue;
     }
 
     crawler = hash_table->heads[i];
 
-    while (crawler->next != NULL) {
+    while (crawler->next != NULL)
+    {
       node_before = crawler;
       crawler = crawler->next;
       free_hash_table_node(node_before);
     }
-    free_hash_table_node(crawler);  
+    free_hash_table_node(crawler);
   }
   free(hash_table->heads);
   free(hash_table);
@@ -277,19 +280,20 @@ static void hash_table_free(hash_table_t *hash_table)
   return;
 }
 
-  // A completar
 static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found)
 {
   unsigned int hashVal;
 
-  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
+  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2)
+  {
     hash_table_grow(*hash_table);
   }
 
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
   // Se o node não existir e se a operação for de insert
-  if (insert_if_not_found == 1) {
+  if (insert_if_not_found == 1)
+  {
     hash_table_node_t *node = allocate_hash_table_node();
       node->next = NULL;
       node->head = NULL;
@@ -297,19 +301,22 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node->representative = node;
       node->number_of_edges = 0;
       node->number_of_vertices = 1;
-    if ((*hash_table)->heads[hashVal] == NULL) {
+    if ((*hash_table)->heads[hashVal] == NULL)
+    {
       strcpy(node->word, word);
 
       (*hash_table)->heads[hashVal] = node;
       (*hash_table)->number_of_entries++;
     }
-    else {
+    else
+    {
       totalColisions++;
 
       hash_table_node_t *last_node;
 
       last_node = (*hash_table)->heads[hashVal];
-      while (last_node->next != NULL) {
+      while (last_node->next != NULL)
+      {
         last_node = last_node->next;
       }
       last_node->next = node;
@@ -319,13 +326,16 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
   }
   else {
     hash_table_node_t *node;
-    if ((*hash_table)->heads[hashVal] != NULL) {
+    if ((*hash_table)->heads[hashVal] != NULL)
+    {
       node = (*hash_table)->heads[hashVal];
       while (node != NULL) {      
-        if (strcmp(node->word, word)==0) {
+        if (strcmp(node->word, word)==0)
+        {
           return node;
         }
-        else {
+        else
+        {
           node = node->next;
         }
       }
@@ -338,8 +348,6 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
 //
 // add edges to the word ladder graph (mostly do be done)
 //
-
-  // A completar
 static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
   hash_table_node_t *representative,*next_node;
@@ -352,9 +360,6 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
   node->representative = representative;
   return representative;
 }
-
-
-  // A completar
 
 static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
 {
@@ -440,7 +445,6 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 //
 // man utf8 for details on the uft8 encoding
 //
-
 static void break_utf8_string(const char *word,int *individual_characters)
 {
   int byte0,byte1;
@@ -532,7 +536,6 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 //
 // returns the number of vertices visited; if the last one is goal, following the previous links gives the shortest path between goal and origin
 //
-
 static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
 {
   //
@@ -545,7 +548,6 @@ static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t
 //
 // list all vertices belonging to a connected component (complete this)
 //
-
 static void list_connected_component(hash_table_t *hash_table,const char *word, int numSpaces)
 {
 
@@ -576,7 +578,6 @@ static void list_connected_component(hash_table_t *hash_table,const char *word, 
 //
 // compute the diameter of a connected component (optional)
 //
-
 static int largest_diameter;
 static hash_table_node_t **largest_diameter_example;
 
@@ -594,7 +595,6 @@ static int connected_component_diameter(hash_table_node_t *node)
 //
 // find the shortest path from a given word to another given word (to be done)
 //
-
 static void path_finder(hash_table_t *hash_table,const char *from_word,const char *to_word)
 {
   //
@@ -606,7 +606,6 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
 //
 // some graph information (optional)
 //
-
 static void graph_info(hash_table_t *hash_table)
 {
   printf("             ╭─────────────────────────────────────────────────────╮\n");
@@ -624,7 +623,6 @@ static void graph_info(hash_table_t *hash_table)
 //
 // some hash table information
 //
-
 static void hash_table_info(hash_table_t *hash_table)
 {
   printf("             ╭─────────────────────────────────────────────────────╮\n");
@@ -649,7 +647,6 @@ static void hash_table_info(hash_table_t *hash_table)
 //
 // calculate the hash table info, the Hash Node with the most colisions, number of nodes used, etc
 //
-
 static void calculateInfo(hash_table_t *hash_table, int* mostColHashNode, int* mostColisions, int* numUsedHashNodes, int* numConnectedComponents, int* numSeperatedComponents, int* largestComponent)
 {
   hash_table_node_t *node;
@@ -701,7 +698,6 @@ static void calculateInfo(hash_table_t *hash_table, int* mostColHashNode, int* m
 //
 // main program
 //
-
 void progressBar(int percent) {
     printf("\r ├");
     for (int x = 0; x < percent-1; x++) {
