@@ -53,7 +53,19 @@
 #define _max_word_size_  32
 
 
+
+int totalWords = 0;
+int totalColisions = 0;
+int mostColHashNode = 0;
+int mostColisions = 0;
+int totalGrows = 0;
+int numUsedHashNodes = 0;
+
 int totalEdges = 0;
+int numConnectedComponents = 0;
+int numSeperatedComponents = 0;
+int largestComponent = 0;
+
 
 //
 // data structures (SUGGESTION --- you may do it in a different way)
@@ -201,6 +213,7 @@ static void hash_table_grow(hash_table_t *hash_table)
   hash_table_node_t *next_node;
 
   hash_table->hash_table_size = hash_table->hash_table_size * 2;
+  totalGrows++;
 
   hash_table_node_t **new_heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
   memset(new_heads, NULL, hash_table->hash_table_size*sizeof(unsigned int*));
@@ -283,7 +296,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node->visited = 0;
       node->representative = node;
       node->number_of_edges = 0;
-      node->number_of_vertices = 0;
+      node->number_of_vertices = 1;
     if ((*hash_table)->heads[hashVal] == NULL) {
       strcpy(node->word, word);
 
@@ -291,6 +304,8 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       (*hash_table)->number_of_entries++;
     }
     else {
+      totalColisions++;
+
       hash_table_node_t *last_node;
 
       last_node = (*hash_table)->heads[hashVal];
@@ -328,7 +343,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
 static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
   hash_table_node_t *representative,*next_node;
-  representative = node->representative;
+  representative = node;
   // Mode to representative
   while (representative->representative != representative) {
     representative = representative->representative;    
@@ -341,46 +356,48 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
 
   // A completar
 
-int showed4 = 0;
 static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
 {
   hash_table_node_t *to,*from_representative,*to_representative;
   adjacency_node_t *link;
   to = find_word(&hash_table,word,0);
 
-  if (to == NULL || to->visited == 1) {
+  if (to == NULL) {
     return;
   }
 
-  showed4++;
   from->number_of_edges++;
-  from->number_of_vertices++;
+  to->number_of_edges++;
 
   // Encontrar o representativo de cada node
   from_representative = find_representative(from);
   to_representative = find_representative(to);
-  to_representative->number_of_vertices++;
+  totalEdges++;
 
-  // Comparar os componentes conexos de cada node para decidir qual componente conexo prevalece na sua junção
-  if (from_representative->number_of_vertices > to_representative->number_of_vertices) {
-    to->representative = from_representative;
-    from_representative->number_of_vertices += to_representative->number_of_vertices;
-  }
-  else if (from_representative->number_of_vertices < to_representative->number_of_vertices) {
-    from->representative = to_representative;
-    to_representative->number_of_vertices += from_representative->number_of_vertices;
-  }
-  else {
-    if (strcmp(from_representative->word, to_representative->word) > 0) {
-      to->representative = from_representative;
+  if (from_representative != to_representative) {
+    // Comparar os componentes conexos de cada node para decidir qual componente conexo prevalece na sua junção
+    if (from_representative->number_of_vertices > to_representative->number_of_vertices) {
       from_representative->number_of_vertices += to_representative->number_of_vertices;
+      to_representative->representative = from_representative;
+      to->representative = from_representative;
     }
-    else {
-      from->representative = to_representative;
+    // Se forem menores ou iguais, vai para o node menor ou o que tiver mais valor em strcmp(sempre o to)
+    else if (from_representative->number_of_vertices < to_representative->number_of_vertices) {
       to_representative->number_of_vertices += from_representative->number_of_vertices;
+      from_representative->representative = to_representative;
+      from->representative = to_representative;
+    }
+    // Automaticamente atribui a prioridade à palavra com menor valor no strcmp, visto que só essas são usadas nesta função
+    else {
+      from_representative->number_of_vertices += to_representative->number_of_vertices;
+      to_representative->representative = from_representative;
+      to->representative = from_representative;
     }
   }
 
+
+  //printf("Num V from > %i", from_representative->number_of_vertices);
+  //printf("Num V to > %i", to_representative->number_of_vertices);
 
   adjacency_node_t *new_link0 = allocate_adjacency_node();
 
@@ -414,15 +431,6 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
     link->next = new_link1;
   }
 
-
-  //to->previous = from;
-
-  //while(from->previous != NULL) {
-  //  from = from->previous;
-  //  totalEdges++;
-  //}
-  //to->head = from;
-  
   return;
 }
 
@@ -543,11 +551,12 @@ static void list_connected_component(hash_table_t *hash_table,const char *word, 
 
   hash_table_node_t *node = find_word(&hash_table, word, 0);
   if (node == NULL) {  
-    printf("NODE não existe!!  word> |%s|\n", word);
+    printf("                     │            ERRO!!!            │\n", word);
+    printf("                     │    Essa palavra não existe    │\n", word);
+    printf("                     │   no ficheiro selecionado!    │\n", word);
     return;
   }
   if (node->head == NULL) {
-    printf("HEAD is null word> |%s|\n", word);
     return;
   }
 
@@ -557,15 +566,9 @@ static void list_connected_component(hash_table_t *hash_table,const char *word, 
     if (link->vertex->visited == 1) {
       continue;
     }
-    printf("Nivel [%i] ╴> %-8s\n", numSpaces ,link->vertex->word);
+
+    printf("                     │ Nivel %4i │  %14s  │\n", numSpaces ,link->vertex->word);
     list_connected_component(hash_table, link->vertex->word, numSpaces+1);
-    if (find_word(&hash_table, link->vertex->word, 0)->head == NULL) {
-      printf("\n");
-      for (int i = 1; i<numSpaces; i++) {
-        printf("%12s", " ");
-      }
-      printf("%12s", "╰");
-    }
   }
 }
 
@@ -606,9 +609,92 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
 
 static void graph_info(hash_table_t *hash_table)
 {
-  //
-  // complete this
-  //
+  printf("             ╭─────────────────────────────────────────────────────╮\n");
+  printf("             │                     Graph Info                      │\n");
+  printf("             ├───────────────────────────────────────────┬─────────┤\n");
+  printf("             │ Number of Edges                           │ %7i │\n", totalEdges);
+  printf("             │ Number of Vertices                        │ %7i │\n", totalWords);
+  printf("             │ Number of connected components (graphs)   │ %7i │\n", numConnectedComponents);
+  printf("             │ Number of Words with no connections       │ %7i │\n", numSeperatedComponents);
+  printf("             │ Size of the largest connected component   │ %7i │\n", largestComponent);
+  printf("             ╰───────────────────────────────────────────┴─────────╯\n");
+}
+
+
+//
+// some hash table information
+//
+
+static void hash_table_info(hash_table_t *hash_table)
+{
+  printf("             ╭─────────────────────────────────────────────────────╮\n");
+  printf("             │                  Hash Table Info                    │\n");
+  printf("             ├───────────────────────────────────────────┬─────────┤\n");
+  printf("             │ Number of Words                           │ %7i │\n", totalWords);
+  printf("             │ Number of Colisions                       │ %7i │\n", totalColisions);
+  printf("             │ Number of uncolided words                 │ %7i │\n", totalWords - totalColisions);
+  printf("             │ Percentage of Colisions                   │ %6i\% │\n", 100*totalColisions/totalWords);
+  printf("             ├───────────────────────────────────────────┼─────────┤\n");
+  printf("             │ Node with the most Colisions              │ %7i │\n", mostColHashNode);
+  printf("             │ Most Colisions in that Node               │ %7i │\n", mostColisions);
+  printf("             ├───────────────────────────────────────────┼─────────┤\n");
+  printf("             │ Final size of the Hash Table              │ %7i │\n", hash_table->hash_table_size);
+  printf("             │ Number of Nodes used                      │ %7i │\n", numUsedHashNodes);
+  printf("             │ Number of empty Nodes                     │ %7i │\n", hash_table->hash_table_size - numUsedHashNodes);
+  printf("             │ Percentage of Hash Table Nodes used       │ %6i\% │\n", 100*numUsedHashNodes/hash_table->hash_table_size);
+  printf("             │ Number of Hash Table grows                │ %7i │\n", totalGrows);
+  printf("             ╰───────────────────────────────────────────┴─────────╯\n");
+}
+
+//
+// calculate the hash table info, the Hash Node with the most colisions, number of nodes used, etc
+//
+
+static void calculateInfo(hash_table_t *hash_table, int* mostColHashNode, int* mostColisions, int* numUsedHashNodes, int* numConnectedComponents, int* numSeperatedComponents, int* largestComponent)
+{
+  hash_table_node_t *node;
+
+  // Run through every hash table head
+  for (int x = 0u; x <= hash_table->hash_table_size; x++) {
+    if(hash_table->heads[x] == NULL) {
+      continue;
+    }
+   
+    // Increment number of used nodes
+    *numUsedHashNodes = *numUsedHashNodes + 1;
+
+    // Calculate how many nodes the head has
+    int nodesInX = 0;
+    for(node = hash_table->heads[x];node != NULL;node = node->next) {
+      nodesInX++;
+
+      // Calculate the number of representatives (same as number of connected components)
+      hash_table_node_t* representative = find_representative(node);
+      if (representative->visited == 0) {
+        *numConnectedComponents = *numConnectedComponents + 1;
+        representative->visited = 1;
+        // Calculate the largest component (most vertices)
+        //printf("\nLargestComp > %i", representative->number_of_vertices);
+        if (representative->number_of_vertices >= *largestComponent) {
+          *largestComponent = representative->number_of_vertices; 
+        }
+        // Calculate number of connected components with only one word (unconnected)
+        if (representative->number_of_vertices < 2) {
+          *numSeperatedComponents = *numSeperatedComponents + 1;
+        }
+      }
+
+    }
+    // Compare the number of nodes to the maximum known
+    if (nodesInX > *mostColisions) {
+      *mostColHashNode = x;
+      *mostColisions = nodesInX;
+    }
+  }
+
+  // Set all the nodes's "visited" flag to 0
+  setNodesVisitedTo0(hash_table);
+  return;
 }
 
 
@@ -616,25 +702,8 @@ static void graph_info(hash_table_t *hash_table)
 // main program
 //
 
-
-  // USAR VALGRIND PARA VER QUANTOS MALLOCS FICAM E COMPARAR COM OS FREES
-
-
-  //for (int x = 0; x < hash_table->hash_table_size; x++) {
-  //  if (x % 6 == 0) {
-  //    printf("\n");
-  //  }
-  //    printf("[%i] > %i\t", x, hash_table->heads[x]);
-  //}
-
-  //for (int x = 0; x < hash_table->hash_table_size; x++) {
-  //  if (hash_table->heads[x] != 0) {
-  //    printf("[%i] > %i\n", x, hash_table->heads[x]);
-  //  }
-  //}
-
 void progressBar(int percent) {
-    printf("\r├");
+    printf("\r ├");
     for (int x = 0; x < percent-1; x++) {
       printf("■");
     }
@@ -644,6 +713,19 @@ void progressBar(int percent) {
     }
     printf("┤├%3i%┤ ", percent);
     fflush(stdout);
+}
+
+void setNodesVisitedTo0(hash_table_t *hash_table) {
+  hash_table_node_t *node;
+  // Set all the node's "visited" flag back to 0
+  for (int x = 0u; x <= hash_table->hash_table_size; x++) {
+    if(hash_table->heads[x] == NULL) {
+      continue;
+    }
+    for(node = hash_table->heads[x];node != NULL;node = node->next) {
+      node->visited = 0;
+    }
+  }
 }
 
 int main(int argc,char **argv)
@@ -666,14 +748,12 @@ int main(int argc,char **argv)
     exit(1);
   }
   
-  int countTotal=0;
-  int countSaved=0;
   int percent=0;
 
-  printf("\nFilling up the hash table...\n");
+  printf("\n  Filling up the hash table...\n");
   while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(&hash_table,word,1);
-    countTotal++;
+    totalWords++;
     percent = (int) (hash_table->number_of_entries * 100 / (hash_table->hash_table_size / 2));
     progressBar(percent);
   }
@@ -683,11 +763,10 @@ int main(int argc,char **argv)
   progressBar(percent);
   printf("\n");
 
-  printf("\nConnecting all the nodes...\n");
+  printf("\n  Connecting all the nodes...\n");
   percent = 0;
   // find all similar words
   for(i = 0u;i < hash_table->hash_table_size;i++) {
-    //printf("\rTable node a scannar > %7i de %7i", i, hash_table->hash_table_size);
     percent = (int) (i * 100 / hash_table->hash_table_size);
     progressBar(percent);
     for(node = hash_table->heads[i];node != NULL;node = node->next) {
@@ -695,35 +774,50 @@ int main(int argc,char **argv)
     }
   }
 
+  // Set all the nodes's "visited" flag to 0
+  setNodesVisitedTo0(hash_table);
+
+  calculateInfo(hash_table, &mostColHashNode, &mostColisions, &numUsedHashNodes, &numConnectedComponents, &numSeperatedComponents, &largestComponent);
+
+
   percent = 100;
   progressBar(percent);
   printf("\n");
-
-  graph_info(hash_table);
-
-
 
   // ask what to do
   for(;;)
   {
     printf("\n\n");
-    fprintf(stderr,"Your wish is my command:\n");
-    fprintf(stderr,"  1 WORD                (list the connected component WORD belongs to)\n");
-    fprintf(stderr,"  2 FROM TO             (list the shortest path from FROM to TO)\n");
-    fprintf(stderr,"  3 DISPLAY HASH TABLE  (display the hash table and apropriate info)\n");
-    fprintf(stderr,"  4 DISPLAY GRAPH INFO  (display the graph info)\n");
-    fprintf(stderr,"  5            (terminate)\n");
-    fprintf(stderr,"> ");
+    fprintf(stderr," ╭──────────────────────────────────────────────────────────────────────────────╮\n");
+    fprintf(stderr," │                           Your wish is my command:                           │  \n");
+    fprintf(stderr," ╰──────────────────────────────────────────────────────────────────────────────╯\n");
+    fprintf(stderr," ╭───┬─────────────────────────┬────────────────────────────────────────────────╮\n");
+    fprintf(stderr," │ 1 │ WORD                    │  list the connected component WORD belongs to  │\n");
+    fprintf(stderr," │ 2 │ FROM TO                 │  list the shortest path from FROM to TO        │\n");
+    fprintf(stderr," │ 3 │ DISPLAY HASH TABLE      │  display the hash table and apropriate info    │\n");
+    fprintf(stderr," │ 4 │ DISPLAY HASH TABLE INFO │  display apropriate info about the hash table  │\n");
+    fprintf(stderr," │ 5 │ DISPLAY GRAPH           │  display the graph                             │\n");
+    fprintf(stderr," │ 6 │ DISPLAY GRAPH INFO      │  display apropriate info about the graph       │\n");
+    fprintf(stderr," │ 7 │                         │  terminate                                     │\n");
+    fprintf(stderr," ╰───┴─────────────────────────┴────────────────────────────────────────────────╯\n");
+    fprintf(stderr,"                                    -> ");
     if(scanf("%99s",word) != 1)
       break;
     command = atoi(word);
+    //system("clear");
+
     if(command == 1)
     {
       if(scanf("%99s",word) != 1)
         break;
-      printf("\n -> %-8s", word);
+      printf("\n                         ╭───────────────────────╮\n");
+      printf("                         │ -> %-18s │\n", word);
+      printf("                         ╰───────────────────────╯\n");
+      printf("                     ╭────────────┬──────────────────╮\n");
       list_connected_component(hash_table,word, 0);
+      printf("                     ╰────────────┴──────────────────╯\n");
     }
+
     else if(command == 2)
     {
       if(scanf("%99s",from) != 1)
@@ -732,42 +826,63 @@ int main(int argc,char **argv)
         break;
       path_finder(hash_table,from,to);
     }
+
     else if(command == 3)
     {
       for (int x = 0u; x < hash_table->hash_table_size; x++) {
-        printf("[%4i]", x);
+        printf("         │ [%7i] │", x);
         for(node = hash_table->heads[x];node != NULL;node = node->next) {
           printf(" -> %s", node->word);
-          countSaved++;
         }
         printf("\n");
       }
-      printf("\nTotal Words > %i  |  Saved Words > %i\n\n", countTotal, countSaved);
-      countSaved = 0;
+      printf("         ╰───────────╯");
     }
+
     else if(command == 4)
     {
-      for (int x = 0u; x < hash_table->hash_table_size; x++) {
+      hash_table_info(hash_table);
+    }
+
+    else if(command == 5)
+    {
+      // Print the nodes of all the representatives
+      for (int x = 0u; x <= hash_table->hash_table_size; x++) {
         if(hash_table->heads[x] == NULL) {
           continue;
         }
         for(node = hash_table->heads[x];node != NULL;node = node->next) {
           hash_table_node_t* representative = find_representative(node);
-          if (representative->visited == 0 && representative->number_of_vertices > 3) {
-            printf("\nREPRESENTATIVE -> %s:\n", representative->word);
+          if (representative->visited == 0) {
+
+
+            printf("\n                         ╭───────────────────────╮\n");
+            printf("                         │    Representative:    │\n");
+            printf("                         │ -> %-18s │\n", representative->word);
+            printf("                         ╰───────────────────────╯\n");
+            //printf("                     ╭────────────┬──────────────────╮\n");
             list_connected_component(hash_table, representative->word, 0);
+            //printf("                     ╰────────────┴──────────────────╯\n");
+
             representative->visited = 1;
           }
         }
       }
 
-      printf("\nNumber of edges > %i\n", showed4);
-      printf("Number of Edges > %i\n", totalEdges);
-      printf("Number of connected components (graphs) > %i\n\n", 0);
+      // Set all the nodes's "visited" flag to 0
     }
-    else if(command == 5)
+    else if(command == 6)
+    {
+      graph_info(hash_table);
+    }
+
+    else if(command == 7)
       break;
+
+    
+    setNodesVisitedTo0(hash_table);
   }
+
   // clean up
   hash_table_free(hash_table);
   return 0;
