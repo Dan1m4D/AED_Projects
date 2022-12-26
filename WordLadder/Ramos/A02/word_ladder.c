@@ -45,13 +45,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 //
 // static configuration
 //
 
-#define _max_word_size_  32
-
+#define _max_word_size_ 32
 
 int totalEdges = 0;
 
@@ -59,25 +57,25 @@ int totalEdges = 0;
 // data structures (SUGGESTION --- you may do it in a different way)
 //
 
-typedef struct adjacency_node_s  adjacency_node_t;
+typedef struct adjacency_node_s adjacency_node_t;
 typedef struct hash_table_node_s hash_table_node_t;
-typedef struct hash_table_s      hash_table_t;
+typedef struct hash_table_s hash_table_t;
 
 struct adjacency_node_s
 {
-  adjacency_node_t *next;            // link to the next adjacency list node
-  hash_table_node_t *vertex;         // the other vertex
+  adjacency_node_t *next;    // link to the next adjacency list node
+  hash_table_node_t *vertex; // the other vertex
 };
 
 struct hash_table_node_s
 {
   // the hash table data
-  char word[_max_word_size_];        // the word
-  hash_table_node_t *next;           // next hash table linked list node
+  char word[_max_word_size_]; // the word
+  hash_table_node_t *next;    // next hash table linked list node
   // the vertex data
-  adjacency_node_t *head;            // head of the linked list of adjancency edges
-  int visited;                       // visited status (while not in use, keep it at 0)
-  hash_table_node_t *previous;       // breadth-first search parent
+  adjacency_node_t *head;      // head of the linked list of adjancency edges
+  int visited;                 // visited status (while not in use, keep it at 0)
+  hash_table_node_t *previous; // breadth-first search parent
   // the union find data
   hash_table_node_t *representative; // the representative of the connected component this vertex belongs to
   int number_of_vertices;            // number of vertices of the conected component (only correct for the representative of each connected component)
@@ -86,12 +84,11 @@ struct hash_table_node_s
 
 struct hash_table_s
 {
-  unsigned int hash_table_size;      // the size of the hash table array
-  unsigned int number_of_entries;    // the number of entries in the hash table
-  unsigned int number_of_edges;      // number of edges (for information purposes only)
-  hash_table_node_t **heads;         // the heads of the linked lists
+  unsigned int hash_table_size;   // the size of the hash table array
+  unsigned int number_of_entries; // the number of entries in the hash table
+  unsigned int number_of_edges;   // number of edges (for information purposes only)
+  hash_table_node_t **heads;      // the heads of the linked lists
 };
-
 
 //
 // allocation and deallocation of linked list nodes (done)
@@ -102,9 +99,9 @@ static adjacency_node_t *allocate_adjacency_node(void)
   adjacency_node_t *node;
 
   node = (adjacency_node_t *)malloc(sizeof(adjacency_node_t));
-  if(node == NULL)
+  if (node == NULL)
   {
-    fprintf(stderr,"allocate_adjacency_node: out of memory\n");
+    fprintf(stderr, "allocate_adjacency_node: out of memory\n");
     exit(1);
   }
   return node;
@@ -120,18 +117,20 @@ static hash_table_node_t *allocate_hash_table_node(void)
   hash_table_node_t *node;
 
   node = (hash_table_node_t *)malloc(sizeof(hash_table_node_t));
-  if(node == NULL)
+  if (node == NULL)
   {
-    fprintf(stderr,"allocate_hash_table_node: out of memory\n");
+    fprintf(stderr, "allocate_hash_table_node: out of memory\n");
     exit(1);
   }
   return node;
 }
 
-static void free_hash_table_node(hash_table_node_t *node) {
+static void free_hash_table_node(hash_table_node_t *node)
+{
   adjacency_node_t *adj_crawler = node->head;
   adjacency_node_t *adj_before;
-  while(adj_crawler != NULL) {
+  while (adj_crawler != NULL)
+  {
     adj_before = adj_crawler;
     adj_crawler = adj_crawler->next;
     free_adjacency_node(adj_before);
@@ -140,7 +139,6 @@ static void free_hash_table_node(hash_table_node_t *node) {
 
   free(node);
 }
-
 
 //
 // hash table stuff (mostly to be done)
@@ -151,32 +149,32 @@ unsigned int crc32(const char *str)
   static unsigned int table[256];
   unsigned int crc;
 
-  if(table[1] == 0u) // do we need to initialize the table[] array?
+  if (table[1] == 0u) // do we need to initialize the table[] array?
   {
-    unsigned int i,j;
+    unsigned int i, j;
 
-    for(i = 0u;i < 256u;i++)
-      for(table[i] = i,j = 0u;j < 8u;j++)
-        if(table[i] & 1u)
+    for (i = 0u; i < 256u; i++)
+      for (table[i] = i, j = 0u; j < 8u; j++)
+        if (table[i] & 1u)
           table[i] = (table[i] >> 1) ^ 0xAED00022u; // "magic" constant
         else
           table[i] >>= 1;
   }
   crc = 0xAED02022u; // initial value (chosen arbitrarily)
-  while(*str != '\0')
+  while (*str != '\0')
     crc = (crc >> 8) ^ table[crc & 0xFFu] ^ ((unsigned int)*str++ << 24);
   return crc;
 }
 
-  // A completar
+// A completar
 static hash_table_t *hash_table_create(void)
 {
   hash_table_t *hash_table;
 
   hash_table = (hash_table_t *)malloc(sizeof(hash_table_t));
-  if(hash_table == NULL)
+  if (hash_table == NULL)
   {
-    fprintf(stderr,"create_hash_table: out of memory\n");
+    fprintf(stderr, "create_hash_table: out of memory\n");
     exit(1);
   }
 
@@ -184,51 +182,57 @@ static hash_table_t *hash_table_create(void)
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
 
-  hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
-  //hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(hash_table->heads));  
-  memset(hash_table->heads, NULL, hash_table->hash_table_size*sizeof(hash_table->heads));
+  hash_table->heads = (unsigned int *)malloc(hash_table->hash_table_size * sizeof(unsigned int *));
+  // hash_table->heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(hash_table->heads));
+  memset(hash_table->heads, NULL, hash_table->hash_table_size * sizeof(hash_table->heads));
 
   return hash_table;
 }
-static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found);
+static hash_table_node_t *find_word(hash_table_t **hash_table, const char *word, int insert_if_not_found);
 
 static void hash_table_free(hash_table_t *hash_table);
-  // A completar
+// A completar
 static void hash_table_grow(hash_table_t *hash_table)
 {
-  unsigned int hashVal;  
+  unsigned int hashVal;
   hash_table_node_t *node;
   hash_table_node_t *next_node;
 
   hash_table->hash_table_size = hash_table->hash_table_size * 2;
 
-  hash_table_node_t **new_heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
-  memset(new_heads, NULL, hash_table->hash_table_size*sizeof(unsigned int*));
-  
-  for (unsigned int i = 0u; i < hash_table->hash_table_size/2; i++) { 
-    if (hash_table->heads[i] != NULL) {   
+  hash_table_node_t **new_heads = (unsigned int *)malloc(hash_table->hash_table_size * sizeof(unsigned int *));
+  memset(new_heads, NULL, hash_table->hash_table_size * sizeof(unsigned int *));
+
+  for (unsigned int i = 0u; i < hash_table->hash_table_size / 2; i++)
+  {
+    if (hash_table->heads[i] != NULL)
+    {
       node = hash_table->heads[i];
-      while(node != NULL) {
-      next_node = node->next;
+      while (node != NULL)
+      {
+        next_node = node->next;
 
         hashVal = crc32(node->word) % hash_table->hash_table_size;
 
-        if (new_heads[hashVal] == NULL) {
+        if (new_heads[hashVal] == NULL)
+        {
           node->next = NULL;
           new_heads[hashVal] = node;
         }
-        else {
+        else
+        {
           hash_table_node_t *last_node;
 
           last_node = new_heads[hashVal];
-          while (last_node->next != NULL) {
+          while (last_node->next != NULL)
+          {
             last_node = last_node->next;
           }
           last_node->next = node;
           node->next = NULL;
         }
 
-        node=next_node;
+        node = next_node;
       }
     }
   }
@@ -238,63 +242,71 @@ static void hash_table_grow(hash_table_t *hash_table)
   free(old_heads);
 }
 
-  // A completar
+// A completar
 static void hash_table_free(hash_table_t *hash_table)
 {
   hash_table_node_t *crawler;
   hash_table_node_t *node_before;
-  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
+  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++)
+  {
 
-    if (hash_table->heads[i] == NULL) {
+    if (hash_table->heads[i] == NULL)
+    {
       continue;
     }
 
     crawler = hash_table->heads[i];
 
-    while (crawler->next != NULL) {
+    while (crawler->next != NULL)
+    {
       node_before = crawler;
       crawler = crawler->next;
       free_hash_table_node(node_before);
     }
-    free_hash_table_node(crawler);  
+    free_hash_table_node(crawler);
   }
   free(hash_table->heads);
   free(hash_table);
-  
+
   return;
 }
 
-  // A completar
-static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,int insert_if_not_found)
+// A completar
+static hash_table_node_t *find_word(hash_table_t **hash_table, const char *word, int insert_if_not_found)
 {
   unsigned int hashVal;
 
-  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
+  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2)
+  {
     hash_table_grow(*hash_table);
   }
 
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
   // Se o node não existir e se a operação for de insert
-  if (insert_if_not_found == 1) {
+  if (insert_if_not_found == 1)
+  {
     hash_table_node_t *node = allocate_hash_table_node();
-      node->next = NULL;
-      node->head = NULL;
-      node->visited = 0;
-      node->representative = node;
-      node->number_of_edges = 0;
-      node->number_of_vertices = 0;
-    if ((*hash_table)->heads[hashVal] == NULL) {
+    node->next = NULL;
+    node->head = NULL;
+    node->visited = 0;
+    node->representative = node;
+    node->number_of_edges = 0;
+    node->number_of_vertices = 0;
+    if ((*hash_table)->heads[hashVal] == NULL)
+    {
       strcpy(node->word, word);
 
       (*hash_table)->heads[hashVal] = node;
       (*hash_table)->number_of_entries++;
     }
-    else {
+    else
+    {
       hash_table_node_t *last_node;
 
       last_node = (*hash_table)->heads[hashVal];
-      while (last_node->next != NULL) {
+      while (last_node->next != NULL)
+      {
         last_node = last_node->next;
       }
       last_node->next = node;
@@ -302,15 +314,20 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
     }
     return NULL;
   }
-  else {
+  else
+  {
     hash_table_node_t *node;
-    if ((*hash_table)->heads[hashVal] != NULL) {
+    if ((*hash_table)->heads[hashVal] != NULL)
+    {
       node = (*hash_table)->heads[hashVal];
-      while (node != NULL) {      
-        if (strcmp(node->word, word)==0) {
+      while (node != NULL)
+      {
+        if (strcmp(node->word, word) == 0)
+        {
           return node;
         }
-        else {
+        else
+        {
           node = node->next;
         }
       }
@@ -319,36 +336,36 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
   }
 }
 
-
 //
 // add edges to the word ladder graph (mostly do be done)
 //
 
-  // A completar
+// A completar
 static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
-  hash_table_node_t *representative,*next_node;
+  hash_table_node_t *representative, *next_node;
   representative = node->representative;
   // Mode to representative
-  while (representative->representative != representative) {
-    representative = representative->representative;    
-  }  
+  while (representative->representative != representative)
+  {
+    representative = representative->representative;
+  }
   // Optimize the node, pointing it straight to the representative
   node->representative = representative;
   return representative;
 }
 
-
-  // A completar
+// A completar
 
 int showed4 = 0;
-static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
+static void add_edge(hash_table_t *hash_table, hash_table_node_t *from, const char *word)
 {
-  hash_table_node_t *to,*from_representative,*to_representative;
+  hash_table_node_t *to, *from_representative, *to_representative;
   adjacency_node_t *link;
-  to = find_word(&hash_table,word,0);
+  to = find_word(&hash_table, word, 0);
 
-  if (to == NULL || to->visited == 1) {
+  if (to == NULL || to->visited == 1)
+  {
     return;
   }
 
@@ -362,25 +379,29 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   to_representative->number_of_vertices++;
 
   // Comparar os componentes conexos de cada node para decidir qual componente conexo prevalece na sua junção
-  if (from_representative->number_of_vertices > to_representative->number_of_vertices) {
+  if (from_representative->number_of_vertices > to_representative->number_of_vertices)
+  {
     to->representative = from_representative;
     from_representative->number_of_vertices += to_representative->number_of_vertices;
   }
-  else if (from_representative->number_of_vertices < to_representative->number_of_vertices) {
+  else if (from_representative->number_of_vertices < to_representative->number_of_vertices)
+  {
     from->representative = to_representative;
     to_representative->number_of_vertices += from_representative->number_of_vertices;
   }
-  else {
-    if (strcmp(from_representative->word, to_representative->word) > 0) {
+  else
+  {
+    if (strcmp(from_representative->word, to_representative->word) > 0)
+    {
       to->representative = from_representative;
       from_representative->number_of_vertices += to_representative->number_of_vertices;
     }
-    else {
+    else
+    {
       from->representative = to_representative;
       to_representative->number_of_vertices += from_representative->number_of_vertices;
     }
   }
-
 
   adjacency_node_t *new_link0 = allocate_adjacency_node();
 
@@ -389,11 +410,14 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   new_link0->next = NULL;
   link = from->head;
   to->visited = 1;
-  if(link == NULL) {
+  if (link == NULL)
+  {
     from->head = new_link0;
   }
-  else {
-    while(link->next != NULL) {
+  else
+  {
+    while (link->next != NULL)
+    {
       link = link->next;
     }
     link->next = new_link0;
@@ -404,28 +428,29 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   new_link1->vertex = from;
   new_link1->next = NULL;
   link = to->head;
-  if(link == NULL) {
+  if (link == NULL)
+  {
     to->head = new_link1;
   }
-  else {
-    while(link->next != NULL) {      
+  else
+  {
+    while (link->next != NULL)
+    {
       link = link->next;
     }
     link->next = new_link1;
   }
 
+  // to->previous = from;
 
-  //to->previous = from;
+  // while(from->previous != NULL) {
+  //   from = from->previous;
+  //   totalEdges++;
+  // }
+  // to->head = from;
 
-  //while(from->previous != NULL) {
-  //  from = from->previous;
-  //  totalEdges++;
-  //}
-  //to->head = from;
-  
   return;
 }
-
 
 //
 // generates a list of similar words and calls the function add_edge for each one (done)
@@ -433,21 +458,21 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
 // man utf8 for details on the uft8 encoding
 //
 
-static void break_utf8_string(const char *word,int *individual_characters)
+static void break_utf8_string(const char *word, int *individual_characters)
 {
-  int byte0,byte1;
+  int byte0, byte1;
 
-  while(*word != '\0')
+  while (*word != '\0')
   {
     byte0 = (int)(*(word++)) & 0xFF;
-    if(byte0 < 0x80)
+    if (byte0 < 0x80)
       *(individual_characters++) = byte0; // plain ASCII character
     else
     {
       byte1 = (int)(*(word++)) & 0xFF;
-      if((byte0 & 0b11100000) != 0b11000000 || (byte1 & 0b11000000) != 0b10000000)
+      if ((byte0 & 0b11100000) != 0b11000000 || (byte1 & 0b11000000) != 0b10000000)
       {
-        fprintf(stderr,"break_utf8_string: unexpected UFT-8 character\n");
+        fprintf(stderr, "break_utf8_string: unexpected UFT-8 character\n");
         exit(1);
       }
       *(individual_characters++) = ((byte0 & 0b00011111) << 6) | (byte1 & 0b00111111); // utf8 -> unicode
@@ -456,68 +481,69 @@ static void break_utf8_string(const char *word,int *individual_characters)
   *individual_characters = 0; // mark the end!
 }
 
-static void make_utf8_string(const int *individual_characters,char word[_max_word_size_])
+static void make_utf8_string(const int *individual_characters, char word[_max_word_size_])
 {
   int code;
 
-  while(*individual_characters != 0)
+  while (*individual_characters != 0)
   {
     code = *(individual_characters++);
-    if(code < 0x80)
+    if (code < 0x80)
       *(word++) = (char)code;
-    else if(code < (1 << 11))
+    else if (code < (1 << 11))
     { // unicode -> utf8
       *(word++) = 0b11000000 | (code >> 6);
       *(word++) = 0b10000000 | (code & 0b00111111);
     }
     else
     {
-      fprintf(stderr,"make_utf8_string: unexpected UFT-8 character\n");
+      fprintf(stderr, "make_utf8_string: unexpected UFT-8 character\n");
       exit(1);
     }
   }
-  *word = '\0';  // mark the end
+  *word = '\0'; // mark the end
 }
 
-static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
+static void similar_words(hash_table_t *hash_table, hash_table_node_t *from)
 {
   static const int valid_characters[] =
-  { // unicode!
-    0x2D,                                                                       // -
-    0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4A,0x4B,0x4C,0x4D,           // A B C D E F G H I J K L M
-    0x4E,0x4F,0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5A,           // N O P Q R S T U V W X Y Z
-    0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6A,0x6B,0x6C,0x6D,           // a b c d e f g h i j k l m
-    0x6E,0x6F,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,           // n o p q r s t u v w x y z
-    0xC1,0xC2,0xC9,0xCD,0xD3,0xDA,                                              // Á Â É Í Ó Ú
-    0xE0,0xE1,0xE2,0xE3,0xE7,0xE8,0xE9,0xEA,0xED,0xEE,0xF3,0xF4,0xF5,0xFA,0xFC, // à á â ã ç è é ê í î ó ô õ ú ü
-    0
-  };
-  int i,j,k,individual_characters[_max_word_size_];
+      {                                                                                          // unicode!
+       0x2D,                                                                                     // -
+       0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D,             // A B C D E F G H I J K L M
+       0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A,             // N O P Q R S T U V W X Y Z
+       0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,             // a b c d e f g h i j k l m
+       0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A,             // n o p q r s t u v w x y z
+       0xC1, 0xC2, 0xC9, 0xCD, 0xD3, 0xDA,                                                       // Á Â É Í Ó Ú
+       0xE0, 0xE1, 0xE2, 0xE3, 0xE7, 0xE8, 0xE9, 0xEA, 0xED, 0xEE, 0xF3, 0xF4, 0xF5, 0xFA, 0xFC, // à á â ã ç è é ê í î ó ô õ ú ü
+       0};
+  int i, j, k, individual_characters[_max_word_size_];
   char new_word[2 * _max_word_size_];
 
-  break_utf8_string(from->word,individual_characters);
-  for(i = 0;individual_characters[i] != 0;i++)
+  break_utf8_string(from->word, individual_characters);
+  for (i = 0; individual_characters[i] != 0; i++)
   {
     k = individual_characters[i];
-    for(j = 0;valid_characters[j] != 0;j++)
+    for (j = 0; valid_characters[j] != 0; j++)
     {
       individual_characters[i] = valid_characters[j];
-      make_utf8_string(individual_characters,new_word);
+      make_utf8_string(individual_characters, new_word);
       // avoid duplicate cases
-      if(strcmp(new_word,from->word) > 0){
-        add_edge(hash_table,from,new_word);
+      if (strcmp(new_word, from->word) > 0)
+      {
+        add_edge(hash_table, from, new_word);
       }
     }
     individual_characters[i] = k;
   }
-  if (from->head == NULL) {
+  if (from->head == NULL)
+  {
     return;
   }
-  for(adjacency_node_t *link = from->head; link->next != NULL; link = link->next) {
+  for (adjacency_node_t *link = from->head; link->next != NULL; link = link->next)
+  {
     link->vertex->visited = 0;
   }
 }
-
 
 //
 // breadth-first search (to be done)
@@ -525,7 +551,7 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 // returns the number of vertices visited; if the last one is goal, following the previous links gives the shortest path between goal and origin
 //
 
-static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
+static int breadth_first_search(int maximum_number_of_vertices, hash_table_node_t **list_of_vertices, hash_table_node_t *origin, hash_table_node_t *goal)
 {
   //
   // complete this
@@ -533,42 +559,46 @@ static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t
   return -1;
 }
 
-
 //
 // list all vertices belonging to a connected component (complete this)
 //
 
-static void list_connected_component(hash_table_t *hash_table,const char *word, int numSpaces)
+static void list_connected_component(hash_table_t *hash_table, const char *word, int numSpaces)
 {
 
   hash_table_node_t *node = find_word(&hash_table, word, 0);
-  if (node == NULL) {  
+  if (node == NULL)
+  {
     printf("NODE não existe!!  word> |%s|\n", word);
     return;
   }
-  if (node->head == NULL) {
+  if (node->head == NULL)
+  {
     printf("HEAD is null word> |%s|\n", word);
     return;
   }
 
   node->visited = 1;
 
-  for(adjacency_node_t *link = node->head; link!= NULL; link = link->next) {
-    if (link->vertex->visited == 1) {
+  for (adjacency_node_t *link = node->head; link != NULL; link = link->next)
+  {
+    if (link->vertex->visited == 1)
+    {
       continue;
     }
-    printf("Nivel [%i] ╴> %-8s\n", numSpaces ,link->vertex->word);
-    list_connected_component(hash_table, link->vertex->word, numSpaces+1);
-    if (find_word(&hash_table, link->vertex->word, 0)->head == NULL) {
+    printf("Nivel [%i] ╴> %-8s\n", numSpaces, link->vertex->word);
+    list_connected_component(hash_table, link->vertex->word, numSpaces + 1);
+    if (find_word(&hash_table, link->vertex->word, 0)->head == NULL)
+    {
       printf("\n");
-      for (int i = 1; i<numSpaces; i++) {
+      for (int i = 1; i < numSpaces; i++)
+      {
         printf("%12s", " ");
       }
       printf("%12s", "╰");
     }
   }
 }
-
 
 //
 // compute the diameter of a connected component (optional)
@@ -587,18 +617,16 @@ static int connected_component_diameter(hash_table_node_t *node)
   return diameter;
 }
 
-
 //
 // find the shortest path from a given word to another given word (to be done)
 //
 
-static void path_finder(hash_table_t *hash_table,const char *from_word,const char *to_word)
+static void path_finder(hash_table_t *hash_table, const char *from_word, const char *to_word)
 {
   //
   // complete this
   //
 }
-
 
 //
 // some graph information (optional)
@@ -611,44 +639,44 @@ static void graph_info(hash_table_t *hash_table)
   //
 }
 
-
 //
 // main program
 //
 
+// USAR VALGRIND PARA VER QUANTOS MALLOCS FICAM E COMPARAR COM OS FREES
 
-  // USAR VALGRIND PARA VER QUANTOS MALLOCS FICAM E COMPARAR COM OS FREES
+// for (int x = 0; x < hash_table->hash_table_size; x++) {
+//   if (x % 6 == 0) {
+//     printf("\n");
+//   }
+//     printf("[%i] > %i\t", x, hash_table->heads[x]);
+// }
 
+// for (int x = 0; x < hash_table->hash_table_size; x++) {
+//   if (hash_table->heads[x] != 0) {
+//     printf("[%i] > %i\n", x, hash_table->heads[x]);
+//   }
+// }
 
-  //for (int x = 0; x < hash_table->hash_table_size; x++) {
-  //  if (x % 6 == 0) {
-  //    printf("\n");
-  //  }
-  //    printf("[%i] > %i\t", x, hash_table->heads[x]);
-  //}
-
-  //for (int x = 0; x < hash_table->hash_table_size; x++) {
-  //  if (hash_table->heads[x] != 0) {
-  //    printf("[%i] > %i\n", x, hash_table->heads[x]);
-  //  }
-  //}
-
-void progressBar(int percent) {
-    printf("\r├");
-    for (int x = 0; x < percent-1; x++) {
-      printf("■");
-    }
-    printf("▶");
-    for (int x = percent; x < 100; x++) {
-      printf("─");
-    }
-    printf("┤├%3i%┤ ", percent);
-    fflush(stdout);
+void progressBar(int percent)
+{
+  printf("\r├");
+  for (int x = 0; x < percent - 1; x++)
+  {
+    printf("■");
+  }
+  printf("▶");
+  for (int x = percent; x < 100; x++)
+  {
+    printf("─");
+  }
+  printf("┤├%3i%┤ ", percent);
+  fflush(stdout);
 }
 
-int main(int argc,char **argv)
+int main(int argc, char **argv)
 {
-  char word[100],from[100],to[100];
+  char word[100], from[100], to[100];
   hash_table_t *hash_table;
   hash_table_node_t *node;
   unsigned int i;
@@ -659,22 +687,23 @@ int main(int argc,char **argv)
   hash_table = hash_table_create();
 
   // read words
-  fp = fopen((argc < 2) ? "wordlist-big-latest.txt" : argv[1],"rb");
-  if(fp == NULL)
+  fp = fopen((argc < 2) ? "wordlist-big-latest.txt" : argv[1], "rb");
+  if (fp == NULL)
   {
-    fprintf(stderr,"main: unable to open the words file\n");
+    fprintf(stderr, "main: unable to open the words file\n");
     exit(1);
   }
-  
-  int countTotal=0;
-  int countSaved=0;
-  int percent=0;
+
+  int countTotal = 0;
+  int countSaved = 0;
+  int percent = 0;
 
   printf("\nFilling up the hash table...\n");
-  while(fscanf(fp,"%99s",word) == 1) {
-    (void)find_word(&hash_table,word,1);
+  while (fscanf(fp, "%99s", word) == 1)
+  {
+    (void)find_word(&hash_table, word, 1);
     countTotal++;
-    percent = (int) (hash_table->number_of_entries * 100 / (hash_table->hash_table_size / 2));
+    percent = (int)(hash_table->number_of_entries * 100 / (hash_table->hash_table_size / 2));
     progressBar(percent);
   }
   fclose(fp);
@@ -686,12 +715,14 @@ int main(int argc,char **argv)
   printf("\nConnecting all the nodes...\n");
   percent = 0;
   // find all similar words
-  for(i = 0u;i < hash_table->hash_table_size;i++) {
-    //printf("\rTable node a scannar > %7i de %7i", i, hash_table->hash_table_size);
-    percent = (int) (i * 100 / hash_table->hash_table_size);
+  for (i = 0u; i < hash_table->hash_table_size; i++)
+  {
+    // printf("\rTable node a scannar > %7i de %7i", i, hash_table->hash_table_size);
+    percent = (int)(i * 100 / hash_table->hash_table_size);
     progressBar(percent);
-    for(node = hash_table->heads[i];node != NULL;node = node->next) {
-      similar_words(hash_table,node);
+    for (node = hash_table->heads[i]; node != NULL; node = node->next)
+    {
+      similar_words(hash_table, node);
     }
   }
 
@@ -701,42 +732,42 @@ int main(int argc,char **argv)
 
   graph_info(hash_table);
 
-
-
   // ask what to do
-  for(;;)
+  for (;;)
   {
     printf("\n\n");
-    fprintf(stderr,"Your wish is my command:\n");
-    fprintf(stderr,"  1 WORD                (list the connected component WORD belongs to)\n");
-    fprintf(stderr,"  2 FROM TO             (list the shortest path from FROM to TO)\n");
-    fprintf(stderr,"  3 DISPLAY HASH TABLE  (display the hash table and apropriate info)\n");
-    fprintf(stderr,"  4 DISPLAY GRAPH INFO  (display the graph info)\n");
-    fprintf(stderr,"  5            (terminate)\n");
-    fprintf(stderr,"> ");
-    if(scanf("%99s",word) != 1)
+    fprintf(stderr, "Your wish is my command:\n");
+    fprintf(stderr, "  1 WORD                (list the connected component WORD belongs to)\n");
+    fprintf(stderr, "  2 FROM TO             (list the shortest path from FROM to TO)\n");
+    fprintf(stderr, "  3 DISPLAY HASH TABLE  (display the hash table and apropriate info)\n");
+    fprintf(stderr, "  4 DISPLAY GRAPH INFO  (display the graph info)\n");
+    fprintf(stderr, "  5            (terminate)\n");
+    fprintf(stderr, "> ");
+    if (scanf("%99s", word) != 1)
       break;
     command = atoi(word);
-    if(command == 1)
+    if (command == 1)
     {
-      if(scanf("%99s",word) != 1)
+      if (scanf("%99s", word) != 1)
         break;
       printf("\n -> %-8s", word);
-      list_connected_component(hash_table,word, 0);
+      list_connected_component(hash_table, word, 0);
     }
-    else if(command == 2)
+    else if (command == 2)
     {
-      if(scanf("%99s",from) != 1)
+      if (scanf("%99s", from) != 1)
         break;
-      if(scanf("%99s",to) != 1)
+      if (scanf("%99s", to) != 1)
         break;
-      path_finder(hash_table,from,to);
+      path_finder(hash_table, from, to);
     }
-    else if(command == 3)
+    else if (command == 3)
     {
-      for (int x = 0u; x < hash_table->hash_table_size; x++) {
+      for (int x = 0u; x < hash_table->hash_table_size; x++)
+      {
         printf("[%4i]", x);
-        for(node = hash_table->heads[x];node != NULL;node = node->next) {
+        for (node = hash_table->heads[x]; node != NULL; node = node->next)
+        {
           printf(" -> %s", node->word);
           countSaved++;
         }
@@ -745,15 +776,19 @@ int main(int argc,char **argv)
       printf("\nTotal Words > %i  |  Saved Words > %i\n\n", countTotal, countSaved);
       countSaved = 0;
     }
-    else if(command == 4)
+    else if (command == 4)
     {
-      for (int x = 0u; x < hash_table->hash_table_size; x++) {
-        if(hash_table->heads[x] == NULL) {
+      for (int x = 0u; x < hash_table->hash_table_size; x++)
+      {
+        if (hash_table->heads[x] == NULL)
+        {
           continue;
         }
-        for(node = hash_table->heads[x];node != NULL;node = node->next) {
-          hash_table_node_t* representative = find_representative(node);
-          if (representative->visited == 0 && representative->number_of_vertices > 3) {
+        for (node = hash_table->heads[x]; node != NULL; node = node->next)
+        {
+          hash_table_node_t *representative = find_representative(node);
+          if (representative->visited == 0 && representative->number_of_vertices > 3)
+          {
             printf("\nREPRESENTATIVE -> %s:\n", representative->word);
             list_connected_component(hash_table, representative->word, 0);
             representative->visited = 1;
@@ -765,7 +800,7 @@ int main(int argc,char **argv)
       printf("Number of Edges > %i\n", totalEdges);
       printf("Number of connected components (graphs) > %i\n\n", 0);
     }
-    else if(command == 5)
+    else if (command == 5)
       break;
   }
   // clean up

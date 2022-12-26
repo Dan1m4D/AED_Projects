@@ -94,23 +94,34 @@ struct hash_table_s
 // queue structure and methods for breath_first_serach
 //
 
-typedef struct queue_type Queue;
-/* typedef struct qnode_type QNode;
+typedef struct queue_linked Queue;
+typedef struct qnode QNode;
 
-struct QNode{
-  adjacency_node_t item;
-  QNode *next;
-}; */
-
-struct queue_type {
-  int size;             // size of the queue
-  void **inp_arr;       // pointer to the queue's array
-  int *Front;           // pointer to the front of the queue
-  int *Back;            // pointer to the back of the queue
+struct qnode{
+  hash_table_node_t *item;
+  QNode *previous;
 };
 
+struct queue_linked{
+  QNode *Front;
+  QNode *Back;
+  // QNode *inp_arr[];
+}; 
+
+// creates a qnode
+static QNode *create_qnode(hash_table_node_t *ht_node){         
+  
+  QNode *node;
+  
+  node->item = ht_node;
+  node->previous = NULL;
+  
+  return node;
+}
+
+// creates a queue of hash_table_nodes_t with SIZE positions
 static Queue *create_queue(int size){
-  // creates a queue of hash_table_nodes_t with SIZE positions
+  
   Queue *queue;
 
   queue = malloc(sizeof(queue));
@@ -123,41 +134,57 @@ static Queue *create_queue(int size){
   }
 
   // fill queue attributes
-  queue->size = size;
-  queue->Front = -1;
-  queue->Back = -1;
+  queue->Front = NULL;
+  queue->Back = NULL;
 
   // allocate memory for queue input array(inp_arr)
-  queue->inp_arr = (adjacency_node_t *)malloc(queue->size*sizeof(adjacency_node_t));
+  /* queue->inp_arr = (hash_table_node_t *)malloc(queue->size*sizeof(hash_table_node_t));
   // fill inp_arr with NULL
-  memset(queue->inp_arr, NULL, queue->size*sizeof(adjacency_node_t));
+  memset(queue->inp_arr, NULL, queue->size*sizeof(hash_table_node_t)); */
 
   return queue;
 };
 
+// frees allocated memory to queue
 void free_queue(Queue *queue){
-  // frees allocated memory to queue->inp_arr and queue
-  free(queue->inp_arr);
+  
+  
   free(queue);
 };
 
 // queue methods
 
-void enqueue(Queue *queue, adjacency_node_t *node){
-  int insert_item;
-    if (queue->Back == queue->size - 1)
-       printf("Overflow \n");
-    else{
-        if (queue->Front == - 1){
-          queue->Front = 0;
-        }
-      
-        Back = Back + 1;
-        inp_arr[Back] = insert_item;
-    }
-}
+// inserts a new node at the back(tail) of the queue
+void enqueue(hash_table_node_t **q, int rear, int front, hash_table_node_t *value){
+  if (front == -1){
+    front = 0;
+  };
 
+  rear++;
+  q[rear] = value;
+};
 
+// pops the front item (head) out of the queue
+void dequeue(int rear, int front){
+
+  // if the queue is empty we can't pop nothing from it
+  if(isEmpty(front, rear)==0)
+    return;
+  front ++;
+  if(front == rear){
+    front = rear = -1;
+  }; 
+};
+
+// Returns 0 if the queue is empty and 1 if it ins't empty
+int isEmpty(int front, int rear){
+  
+  // if the end and the front of the queue are NULL then the queue is empty
+  if(front == rear)
+    return 1;
+  else
+    return 0;
+};
 
 
 
@@ -489,16 +516,32 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // Recebe o numero maximo de vertices, uma lista dos vertices(GRAFO A PERCORRER), a root e o objetivo
   hash_table_node_t *visited_vertices[maximum_number_of_vertices];
   hash_table_node_t *queue[maximum_number_of_vertices];
-  hash_table_node_t **path[maximum_number_of_vertices];
 
-  origin->visited = 1;
-  visited_vertices[0] = origin;
-  queue[0] = origin;
+  //hash_table_node_t **path[maximum_number_of_vertices];
+  if (goal->representative != origin->representative){
+    printf("\nOrigin node and Goal node aren't connected");
+    return;
+  };
 
-  
+  int rear, front = -1;
+  int n = 0;
+  enqueue(queue, rear, front, origin);
+
+  while(isEmpty(front,rear) == 0){
+    hash_table_node_t *adjency_list = queue[front]->head->vertex;
+    for(int i = 0;i < size(adjency_list); i++){
+        printf(adjency_list);
+        adjency_list++;
+    };
 
 
-
+    if(front!=-1){
+      visited_vertices[n] = queue[front];
+      dequeue(rear,front);
+      n++;
+    }
+  }
+  // visits all vertices in list_of_vertices
 
   return -1;
 }
