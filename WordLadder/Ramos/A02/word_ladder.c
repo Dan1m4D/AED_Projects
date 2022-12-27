@@ -184,8 +184,7 @@ static hash_table_t *hash_table_create(void)
   hash_table_t *hash_table;
 
   hash_table = (hash_table_t *)malloc(sizeof(hash_table_t));
-  if(hash_table == NULL)
-  {
+  if(hash_table == NULL) {
     fprintf(stderr,"create_hash_table: out of memory\n");
     exit(1);
   }
@@ -211,23 +210,21 @@ static void hash_table_grow(hash_table_t *hash_table)
 
   hash_table->hash_table_size = hash_table->hash_table_size * 2;
   totalGrows++;
-
+  // Alocar o novo array de hash table
   hash_table_node_t **new_heads = (unsigned int*) malloc(hash_table->hash_table_size*sizeof(unsigned int*));  
   memset(new_heads, NULL, hash_table->hash_table_size*sizeof(unsigned int*));
   
-  for (unsigned int i = 0u; i < hash_table->hash_table_size/2; i++)
-  { 
-    if (hash_table->heads[i] != NULL)
-    {   
+  // Iterar sobre a hash table antiga
+  for (unsigned int i = 0u; i < hash_table->hash_table_size/2; i++) { 
+    if (hash_table->heads[i] != NULL) {   
       node = hash_table->heads[i];
-      while(node != NULL)
-      {
-      next_node = node->next;
-
+      // Iterar sobre as linked lists
+      while(node != NULL) {
+        next_node = node->next;
         hashVal = crc32(node->word) % hash_table->hash_table_size;
 
-        if (new_heads[hashVal] == NULL)
-        {
+        // Colocar na nova hash table
+        if (new_heads[hashVal] == NULL) {
           node->next = NULL;
           new_heads[hashVal] = node;
         }
@@ -235,8 +232,7 @@ static void hash_table_grow(hash_table_t *hash_table)
           hash_table_node_t *last_node;
 
           last_node = new_heads[hashVal];
-          while (last_node->next != NULL)
-          {
+          while (last_node->next != NULL) {
             last_node = last_node->next;
           }
           last_node->next = node;
@@ -247,7 +243,7 @@ static void hash_table_grow(hash_table_t *hash_table)
       }
     }
   }
-
+  // Trocar o array na variável hash_table_t pelo novo array
   hash_table_node_t **old_heads = hash_table->heads;
   hash_table->heads = new_heads;
   free(old_heads);
@@ -284,16 +280,16 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
 {
   unsigned int hashVal;
 
-  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2)
-  {
+  // Verificar o preenchimento da hash table
+  if ((*hash_table)->number_of_entries >= (*hash_table)->hash_table_size / 2) {
     hash_table_grow(*hash_table);
   }
-
+  // Obter o hash code da palavra
   hashVal = crc32(word) % (*hash_table)->hash_table_size;
 
-  // Se o node não existir e se a operação for de insert
-  if (insert_if_not_found == 1)
-  {
+  // Se a operação for de insert
+  if (insert_if_not_found == 1) {
+    // Criar o Node
     hash_table_node_t *node = allocate_hash_table_node();
       node->next = NULL;
       node->head = NULL;
@@ -301,19 +297,19 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node->representative = node;
       node->number_of_edges = 0;
       node->number_of_vertices = 1;
-    if ((*hash_table)->heads[hashVal] == NULL)
-    {
+
+    // Se não existir um Node nesse hash value 
+    if ((*hash_table)->heads[hashVal] == NULL) {
       strcpy(node->word, word);
 
       (*hash_table)->heads[hashVal] = node;
       (*hash_table)->number_of_entries++;
     }
-    else
-    {
+    // Se já existir um Node nesse hash value 
+    else {
       totalColisions++;
-
       hash_table_node_t *last_node;
-
+      // Percorrer a lista até ao fim
       last_node = (*hash_table)->heads[hashVal];
       while (last_node->next != NULL)
       {
@@ -324,18 +320,20 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
     }
     return NULL;
   }
+
+  // Caso não seja para inserir nodes novos
   else {
     hash_table_node_t *node;
-    if ((*hash_table)->heads[hashVal] != NULL)
-    {
+    // Caso o hash value corresponda a algum node
+    if ((*hash_table)->heads[hashVal] != NULL) {
       node = (*hash_table)->heads[hashVal];
+      // Percorrer a lista de nodes
+      // até encontrar o pretendido
       while (node != NULL) {      
-        if (strcmp(node->word, word)==0)
-        {
+        if (strcmp(node->word, word)==0) {
           return node;
         }
-        else
-        {
+        else {
           node = node->next;
         }
       }
@@ -738,8 +736,7 @@ int main(int argc,char **argv)
 
   // read words
   fp = fopen((argc < 2) ? "wordlist-big-latest.txt" : argv[1],"rb");
-  if(fp == NULL)
-  {
+  if(fp == NULL) {
     fprintf(stderr,"main: unable to open the words file\n");
     exit(1);
   }
