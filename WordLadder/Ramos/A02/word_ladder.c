@@ -629,7 +629,6 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
           fprintf(stderr, "\n<-- ");
           break;
        }
-
     }
   }
 }
