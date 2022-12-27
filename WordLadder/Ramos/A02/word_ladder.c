@@ -598,6 +598,41 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
   //
   // complete this
   //
+
+
+
+  const hash_table_node_t * source = find_word(&hash_table, from_word, 0) ,
+                          * goal = find_word(&hash_table, to_word, 0) ,
+                          * currentPath ,
+                          * allPaths;
+  adjacency_node_t * link ; hash_table_node_t * node, * currentVertex;
+
+  int goal_found = 0 , pathn = 0;
+
+  //Iterate through every adjacency node
+  for (link = source->head ; link != NULL ; link->next) {
+    fprintf(stderr, "\n--> ");
+    
+    
+    //Dont check the path that is already travaled by
+    if( currentVertex->visited == 1 ){continue ;}
+
+    currentVertex->visited = 1 ;
+
+
+    // Get the actual vertex
+    //currentVertex = link->vertex ;
+    for(currentVertex = link->vertex ; currentVertex != NULL ; currentVertex->next){
+      printf(" | %s | ", currentVertex->word);
+
+      if( strcmp ( currentVertex->word ,  goal->word ) == 0 ){
+          goal_found = 0;
+          fprintf(stderr, "\n<-- ");
+          break;
+       }
+      
+    }
+  }
 }
 
 
