@@ -253,23 +253,23 @@ static void hash_table_free(hash_table_t *hash_table)
 {
   hash_table_node_t *crawler;
   hash_table_node_t *node_before;
-  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++)
-  {
-    if (hash_table->heads[i] == NULL)
-    {
+  // Percorrer a hash table toda
+  for (unsigned int i = 0u; i < hash_table->hash_table_size; i++) {
+    if (hash_table->heads[i] == NULL) {
       continue;
     }
-
+    // Percorrer pelas listas até ao final
     crawler = hash_table->heads[i];
-
-    while (crawler->next != NULL)
-    {
+    while (crawler->next != NULL) {
       node_before = crawler;
       crawler = crawler->next;
+      // Libertar o node anterior ao crawler
       free_hash_table_node(node_before);
     }
+    // Libertar o node deixado para trás pelo crawler
     free_hash_table_node(crawler);
   }
+  // Libertar o resto da hash table
   free(hash_table->heads);
   free(hash_table);
   
@@ -350,11 +350,11 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
   hash_table_node_t *representative,*next_node;
   representative = node;
-  // Mode to representative
+  // Mover para o node representatívo até um deles apontar para sí próprio
   while (representative->representative != representative) {
     representative = representative->representative;    
   }  
-  // Optimize the node, pointing it straight to the representative
+  // Optimizar o node, apontando diretaente para o node representatívo real
   node->representative = representative;
   return representative;
 }
@@ -378,19 +378,22 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   totalEdges++;
 
   if (from_representative != to_representative) {
-    // Comparar os componentes conexos de cada node para decidir qual componente conexo prevalece na sua junção
+    //  Comparar os componentes conexos de cada node para decidir qual 
+    // componente conexo prevalece na sua junção
     if (from_representative->number_of_vertices > to_representative->number_of_vertices) {
       from_representative->number_of_vertices += to_representative->number_of_vertices;
       to_representative->representative = from_representative;
       to->representative = from_representative;
     }
-    // Se forem menores ou iguais, vai para o node menor ou o que tiver mais valor em strcmp(sempre o to)
+    //  Se forem menores ou iguais, vai para o node menor ou o que tiver mais valor 
+    // em strcmp(sempre o to)
     else if (from_representative->number_of_vertices < to_representative->number_of_vertices) {
       to_representative->number_of_vertices += from_representative->number_of_vertices;
       from_representative->representative = to_representative;
       from->representative = to_representative;
     }
-    // Automaticamente atribui a prioridade à palavra com menor valor no strcmp, visto que só essas são usadas nesta função
+    //  Automaticamente atribui a prioridade à palavra com menor valor no strcmp, 
+    // visto que só essas são usadas nesta função
     else {
       from_representative->number_of_vertices += to_representative->number_of_vertices;
       to_representative->representative = from_representative;
@@ -399,16 +402,13 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   }
 
 
-  //printf("Num V from > %i", from_representative->number_of_vertices);
-  //printf("Num V to > %i", to_representative->number_of_vertices);
-
-  adjacency_node_t *new_link0 = allocate_adjacency_node();
-
   // Adicionar link ao node from
+  adjacency_node_t *new_link0 = allocate_adjacency_node();
   new_link0->vertex = to;
   new_link0->next = NULL;
   link = from->head;
   to->visited = 1;
+  // Colocar na lista de links do node
   if(link == NULL) {
     from->head = new_link0;
   }
@@ -424,6 +424,7 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   new_link1->vertex = from;
   new_link1->next = NULL;
   link = to->head;
+  // Colocar na lista de links do node
   if(link == NULL) {
     to->head = new_link1;
   }
@@ -548,26 +549,30 @@ static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t
 //
 static void list_connected_component(hash_table_t *hash_table,const char *word, int numSpaces)
 {
-
   hash_table_node_t *node = find_word(&hash_table, word, 0);
+  // Caso a palavra não exista
   if (node == NULL) {  
     printf("                     │            ERRO!!!            │\n", word);
     printf("                     │    Essa palavra não existe    │\n", word);
     printf("                     │   no ficheiro selecionado!    │\n", word);
     return;
   }
+  // Caso tenha-mos chegado ao fim da lista de links da palavra
   if (node->head == NULL) {
     return;
   }
 
+  // Marcar o node atual como visitado
   node->visited = 1;
-
+  // Iterar sobre todas os nodes ligados ao original
   for(adjacency_node_t *link = node->head; link!= NULL; link = link->next) {
+    // Não listar nodes visitados
     if (link->vertex->visited == 1) {
       continue;
     }
-
+    // Imprimir o node
     printf("                     │ Nivel %4i │  %14s  │\n", numSpaces ,link->vertex->word);
+    // Recursívamente ler o próximo node e os seus links
     list_connected_component(hash_table, link->vertex->word, numSpaces+1);
   }
 }
@@ -755,10 +760,10 @@ int main(int argc,char **argv)
   percent = 100;
   progressBar(percent);
   printf("\n");
+  percent = 0;
 
   printf("\n  Connecting all the nodes...\n");
-  percent = 0;
-  // find all similar words
+  // Iterar sobre todos os nodes
   for(i = 0u;i < hash_table->hash_table_size;i++) {
     percent = (int) (i * 100 / hash_table->hash_table_size);
     progressBar(percent);
@@ -799,8 +804,7 @@ int main(int argc,char **argv)
     command = atoi(word);
     //system("clear");
 
-    if(command == 1)
-    {
+    if(command == 1) {
       if(scanf("%99s",word) != 1)
         break;
       printf("\n                         ╭───────────────────────╮\n");
@@ -811,8 +815,7 @@ int main(int argc,char **argv)
       printf("                     ╰────────────┴──────────────────╯\n");
     }
 
-    else if(command == 2)
-    {
+    else if(command == 2) {
       if(scanf("%99s",from) != 1)
         break;
       if(scanf("%99s",to) != 1)
@@ -820,25 +823,32 @@ int main(int argc,char **argv)
       path_finder(hash_table,from,to);
     }
 
-    else if(command == 3)
-    {
+    else if(command == 3) {
+      printf("         ╭───────────╮");
+      // Iterar sobre a tabela toda
       for (int x = 0u; x < hash_table->hash_table_size; x++) {
         printf("         │ [%7i] │", x);
+        // Iterar sobre as listas
         for(node = hash_table->heads[x];node != NULL;node = node->next) {
           printf(" -> %s", node->word);
         }
         printf("\n");
       }
+
       printf("         ╰───────────╯");
     }
 
-    else if(command == 4)
-    {
+    else if(command == 4) {
       hash_table_info(hash_table);
     }
 
-    else if(command == 5)
-    {
+    else if(command == 5) {
+      int minConnCompSize;
+      int numConnCompShowed = 0;
+      char* tempStr[100];
+      fprintf(stderr,"            Tamanho mínimo do grafo -> ");
+      scanf("%99s",tempStr) != 1;
+      minConnCompSize = atoi(tempStr);
       // Print the nodes of all the representatives
       for (int x = 0u; x <= hash_table->hash_table_size; x++) {
         if(hash_table->heads[x] == NULL) {
@@ -846,26 +856,29 @@ int main(int argc,char **argv)
         }
         for(node = hash_table->heads[x];node != NULL;node = node->next) {
           hash_table_node_t* representative = find_representative(node);
-          if (representative->visited == 0) {
-
-
+          if (representative->visited == 0 && representative->number_of_vertices >= minConnCompSize) {
             printf("\n                         ╭───────────────────────╮\n");
             printf("                         │    Representative:    │\n");
             printf("                         │ -> %-18s │\n", representative->word);
             printf("                         ╰───────────────────────╯\n");
-            //printf("                     ╭────────────┬──────────────────╮\n");
+            printf("                     ╭────────────┬──────────────────╮\n");
             list_connected_component(hash_table, representative->word, 0);
-            //printf("                     ╰────────────┴──────────────────╯\n");
-
+            printf("                     ╰────────────┴──────────────────╯\n");
+            numConnCompShowed++;
             representative->visited = 1;
           }
         }
       }
 
-      // Set all the nodes's "visited" flag to 0
+      printf("\n                       ╭───────────────────────────╮\n");
+      printf("                       │   Número de componentes   │\n");
+      printf("                       │ conexos com tamanho igual │\n");
+      printf("                       │    ou maior do que %-4i   │\n", minConnCompSize);
+      printf("                       ├───────────────────────────┤\n");
+      printf("                       │  -> %9i             │\n", numConnCompShowed);
+      printf("                       ╰───────────────────────────╯\n");
     }
-    else if(command == 6)
-    {
+    else if(command == 6) {
       graph_info(hash_table);
     }
 
