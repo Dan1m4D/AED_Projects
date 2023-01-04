@@ -11,5 +11,8 @@ clean:
 word_ladder:		word_ladder.c
 	cc -Wall -Wextra -O2 word_ladder.c -o word_ladder -lm
 
+word_ladder_ramos:		word_ladder_ramos.c
+	cc -Wall -Wextra -O2 word_ladder_ramos.c -o word_ladder_ramos -lm
+
 solution_word_ladder:	solution_word_ladder.c
 	cc -Wall -Wextra -O2 solution_word_ladder.c -o solution_word_ladder -lm

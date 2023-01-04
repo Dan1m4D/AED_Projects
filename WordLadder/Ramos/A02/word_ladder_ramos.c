@@ -294,6 +294,7 @@ static hash_table_node_t *find_word(hash_table_t **hash_table,const char *word,i
       node->next = NULL;
       node->head = NULL;
       node->visited = 0;
+      node->previous = NULL;
       node->representative = node;
       node->number_of_edges = 0;
       node->number_of_vertices = 1;
@@ -535,11 +536,45 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 //
 // returns the number of vertices visited; if the last one is goal, following the previous links gives the shortest path between goal and origin
 //
-static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
+static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t *list_of_vertices[],hash_table_node_t *origin,hash_table_node_t *goal)
 {
-  //
-  // complete this
-  //
+  adjacency_node_t *link;
+  hash_table_node_t *lastNode;
+  int nivel = 0;
+  int n = 0;
+  int i = 0;
+  int found = 0;
+  // Iterate through every adjacency node
+  origin->visited = 1;
+  list_of_vertices[0] = origin;
+
+  while (found == 0 && n < maximum_number_of_vertices) {
+    for(adjacency_node_t *link = list_of_vertices[n]->head; link != NULL; link = link->next) {
+      // Dont check the path that is already travaled by
+      if( link->vertex->visited == 1 ){
+        continue;
+      }
+
+      link->vertex->visited = 1;
+      
+      i++;
+      link->vertex->previous = list_of_vertices[n];
+      list_of_vertices[i] = link->vertex;
+
+      if (link->vertex == goal) {
+        found = 1;
+        printf("\n--> %s", link->vertex->word);
+        for (hash_table_node_t* parentNode = list_of_vertices[n]; parentNode != NULL; parentNode = parentNode->previous) {
+          printf("\n--> %s", parentNode->word);
+          nivel++;
+        }
+        printf("\n-nivel > %i", nivel);
+        return n;
+      }
+
+    }
+    n++;
+  }
   return -1;
 }
 
@@ -600,40 +635,31 @@ static int connected_component_diameter(hash_table_node_t *node)
 //
 static void path_finder(hash_table_t *hash_table,const char *from_word,const char *to_word)
 {
-  const hash_table_node_t * source = find_word(&hash_table, from_word, 0) ,
-                          * goal = find_word(&hash_table, to_word, 0) ,
-                          * currentPath ,
-                          * allPaths;
-  adjacency_node_t * link ; 
-  hash_table_node_t * node, * currentVertex;
+  const hash_table_node_t *source = find_word(&hash_table, from_word, 0),
+                          *goal = find_word(&hash_table, to_word, 0);
+  const hash_table_node_t *sourceRepresentative = find_representative(source),
+                          *goalRepresentative = find_representative(goal);
 
-  int goal_found = 0 , pathn = 0;
-
-  // Iterate through every adjacency node
-  for (link = source->head ; link != NULL ; link->next) {
-    fprintf(stderr, "\n--> ");
-
-
-    // Dont check the path that is already travaled by
-    if( currentVertex->visited == 1 ){
-      continue ;
-    }
-
-    currentVertex->visited = 1 ;
-
-
-    // Get the actual vertex
-    // currentVertex = link->vertex ;
-    for(currentVertex = link->vertex ; currentVertex != NULL ; currentVertex->next){
-      printf(" | %s | ", currentVertex->word);
-
-      if( strcmp ( currentVertex->word ,  goal->word ) == 0 ){
-          goal_found = 0;
-          fprintf(stderr, "\n<-- ");
-          break;
-       }
-    }
+  if (source == NULL) {
+    printf("\nERRO! A palavra inicial não existe no ficheiro selecionado!!!\n");
+    return;
   }
+  if (goal == NULL) {
+    printf("\nERRO! A palavra destino não existe no ficheiro selecionado!!!\n");
+    return;
+  }
+
+  if (sourceRepresentative != goalRepresentative) {
+    printf("\nERRO! As palavras inseridas não tem ligações possíveis!!!\n");
+    return;
+  }
+  
+  hash_table_node_t *currentPath[largestComponent + 1];
+
+  int distance = breadth_first_search(hash_table->hash_table_size, currentPath, source, goal);
+
+  return;
+
 }
 
 
@@ -748,12 +774,25 @@ void progressBar(int percent) {
 void setNodesVisitedTo0(hash_table_t *hash_table) {
   hash_table_node_t *node;
   // Set all the node's "visited" flag back to 0
-  for (int x = 0u; x <= hash_table->hash_table_size; x++) {
+  for (int x = 0u; x < hash_table->hash_table_size; x++) {
     if(hash_table->heads[x] == NULL) {
       continue;
     }
     for(node = hash_table->heads[x];node != NULL;node = node->next) {
       node->visited = 0;
+    }
+  }
+}
+
+void setNodesPreviousToNULL(hash_table_t *hash_table) {
+  hash_table_node_t *node;
+  // Set all the node's "previous" flag back to NULL
+  for (int x = 0u; x < hash_table->hash_table_size; x++) {
+    if(hash_table->heads[x] == NULL) {
+      continue;
+    }
+    for(node = hash_table->heads[x];node != NULL;node = node->next) {
+      node->previous = NULL;
     }
   }
 }
@@ -852,6 +891,8 @@ int main(int argc,char **argv)
       if(scanf("%99s",to) != 1)
         break;
       path_finder(hash_table,from,to);
+      setNodesPreviousToNULL(hash_table);
+      setNodesVisitedTo0(hash_table);
     }
 
     else if(command == 3) {
