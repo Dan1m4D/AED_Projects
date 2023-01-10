@@ -538,25 +538,29 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 //
 static int breadth_first_search(int maximum_number_of_vertices,hash_table_node_t *list_of_vertices[],hash_table_node_t *origin,hash_table_node_t *goal)
 {
-  int n = 0;
-  int i = 0;
+  int n = 0; // end of the node "level"
+  int i = 0; // tail of the list
   int found = 0;
-  // Iterate through every adjacency node
+
   origin->visited = 1;
   list_of_vertices[0] = origin;
 
   while (found == 0 && n < maximum_number_of_vertices) {
+    // Iterate through every adjacency node connected to the current node
     for(adjacency_node_t *link = list_of_vertices[n]->head; link != NULL; link = link->next) {
-      // Dont check the path that is already travaled by
+      // Dont check the path that is already traveled by
       if( link->vertex->visited == 1 ){
         continue;
       }
 
       i++;
       link->vertex->visited = 1;
+      // Link the new node to its respective "parent" (current node)
       link->vertex->previous = list_of_vertices[n];
+      // Add the new node to the tail of the list
       list_of_vertices[i] = link->vertex;
 
+      // If we find the pretended node
       if (link->vertex == goal) {
         found = 1;
         return n;
